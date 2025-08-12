@@ -1,0 +1,79 @@
+﻿using SkullKingCore.Cards.Base;
+using SkullKingCore.Cards.Factory;
+using SkullKingCore.Core;
+using SkullKingCore.Extensions;
+using SkullKingCore.GameDefinitions;
+using SkullKingCore.Logging;
+
+namespace SkullKingCore.GameLogic
+{
+    public class TrickSimulation
+    {
+
+        public int PlayerCount { get; private set; }
+        public int CurrentRound { get; private set; }
+        public int Seed {  get; private set; }
+
+        public TrickSimulation(int playerCount, int currentRound, int seed)
+        {
+            PlayerCount = playerCount;
+            CurrentRound = currentRound;
+            Seed = seed;
+        }
+
+        public void Play()
+        {
+            List<BaseCard> gameCards = new List<BaseCard>();
+
+            gameCards = Deck.CreateDeck();
+
+            List<BaseCard> shuffledGameCards = gameCards.ToList().Shuffle(Seed);
+
+            List<Player> players = new List<Player>();
+
+            for (int playerCounter = 0; playerCounter < PlayerCount; playerCounter++)
+            {
+                Player newPlayer = new Player($"Player_{playerCounter + 1}");
+
+                newPlayer.CurrentCards = shuffledGameCards.TakeChunk(CurrentRound);
+
+                players.Add(newPlayer);
+            }
+
+            List<BaseCard> currentTrick = new List<BaseCard>();
+
+            Logger.Instance.WriteToConsoleAndLog($"Seed: {Seed}");
+            Logger.Instance.WriteToConsoleAndLog($"");
+
+            foreach (Player player in players)
+            {
+                BaseCard playedCardOfPlayer = player.CurrentCards.TakeChunk(1).First();
+
+                currentTrick.Add(playedCardOfPlayer);
+
+                Logger.Instance.WriteToConsoleAndLog($"{player.Name}");
+                Logger.Instance.WriteToConsoleAndLog($"{playedCardOfPlayer}");
+            }
+
+            int? indexOfWinningCard = TrickResolver.DetermineTrickWinnerIndex(currentTrick);
+
+            if (indexOfWinningCard == null)
+            {
+                Logger.Instance.WriteToConsoleAndLog("");
+                Logger.Instance.WriteToConsoleAndLog($"Draw, nobody wins!");
+            }
+            else
+            {
+                BaseCard winningCard = currentTrick[(int)indexOfWinningCard];
+
+                Logger.Instance.WriteToConsoleAndLog("");
+                Logger.Instance.WriteToConsoleAndLog("Winner:");
+                Logger.Instance.WriteToConsoleAndLog($"{winningCard}");
+            }
+
+        }
+
+
+
+    }
+}
