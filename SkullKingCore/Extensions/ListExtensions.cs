@@ -2,7 +2,7 @@
 {
     public static class ListExtensions
     {
-        private static Random staticRng = new Random(1);
+        private static Random staticRng = new Random();
 
         public static List<T> Shuffle<T>(this List<T> list, int seed)
         {

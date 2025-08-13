@@ -73,7 +73,7 @@ namespace SkullKingConsole
             // 1. Create players
             var players = new List<Player>();
 
-            for (int i = 1; i <= 1; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 Player player = new Player($"{i}", $"CPU_{i}");
 

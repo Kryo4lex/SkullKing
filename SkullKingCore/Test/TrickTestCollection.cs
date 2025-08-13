@@ -361,6 +361,14 @@ namespace SkullKingCore.Test
                     new NumberCard(CardType.YELLOW,  8),
                     new NumberCard(CardType.BLACK,   4),
                 }, 1),
+
+                new TrickTest("30", new List<Card>
+                {
+                    new EscapeCard(),
+                    new NumberCard(CardType.LILA,   1),
+                    new NumberCard(CardType.LILA,   6),//Winner lead color and highest number
+                    new NumberCard(CardType.GREEN, 14),
+                }, 2),
             };
         }
 

@@ -121,6 +121,7 @@ namespace SkullKingConsole.Controller
 
         public Task NotifyAboutSubRoundStartAsync(GameState state)
         {
+            Console.Clear();
             Logger.Instance.WriteToConsoleAndLog($"--- Sub round {state.CurrentSubRound}/{state.MaxRounds} started ---");
 
             return Task.CompletedTask;
@@ -130,6 +131,8 @@ namespace SkullKingConsole.Controller
         {
             //no need to tell console CPU what is happening
             Logger.Instance.WriteToConsoleAndLog($"--- Sub round {state.CurrentSubRound}/{state.MaxRounds} ended ---");
+            Logger.Instance.WriteToConsoleAndLog($"Press Any Key to continue");
+            Console.ReadLine();
 
             return Task.CompletedTask;
         }

@@ -116,25 +116,24 @@ namespace SkullKingCore.Core.Game
             }
 
             int? winnerIndex = TrickResolver.DetermineTrickWinnerIndex(cardsInPlay);
-            Player? winner = winnerIndex.HasValue ? _state.Players[winnerIndex.Value] : null;
-            Card? winningCard = winnerIndex.HasValue ? cardsInPlay[winnerIndex.Value] : null;
+            Player? winner = null;
+            Card? winningCard = null;
+            int newStartingPlayerIndex = _state.StartingPlayerIndex; // default to current starting player
 
-            // ToDo: winner would be the person who otherwise would have won for Kraken
-            if (winnerIndex == null)
+            if (winnerIndex.HasValue)
             {
-                winnerIndex = TrickResolver.DetermineTrickWinnerIndexNoSpecialCards(cardsInPlay);
+                newStartingPlayerIndex = (_state.StartingPlayerIndex + winnerIndex.Value) % playerCount;
+                winner = _state.Players[newStartingPlayerIndex];
+                winningCard = cardsInPlay[winnerIndex.Value];
             }
-            else
-            {
-                // ToDo: Score Handling
-            }
+
+            // Set the next starting player only if we have a winner
+            _state.StartingPlayerIndex = newStartingPlayerIndex;
 
             foreach (var controller in _controllers.Values)
             {
                 await controller.NotifyAboutSubRoundWinnerAsync(winner, winningCard, _state.CurrentRound);
             }
-
-            _state.StartingPlayerIndex = (int)winnerIndex;
         }
 
         private async Task EndGameAsync()
