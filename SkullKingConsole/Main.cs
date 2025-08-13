@@ -83,7 +83,7 @@ namespace SkullKingConsole
             var controllers = new Dictionary<string, IGameController>();
             foreach (var player in players)
             {
-                controllers[player.Id] = new ConsoleCPUController(player.Name);
+                controllers[player.Id] = new LocalConsoleCPUController(player.Name);
             }
 
             // 3. Create the game state with, e.g., 5 rounds
