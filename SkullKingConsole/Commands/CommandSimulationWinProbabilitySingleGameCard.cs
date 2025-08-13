@@ -16,9 +16,9 @@ namespace SkullKingConsole.Commands
             int playerCount;
             int nSimulations;
 
-            List<BaseCard> allGameCards = Deck.CreateDeck();
+            List<Card> allGameCards = Deck.CreateDeck();
 
-            BaseCard.PrintListFancy(allGameCards);
+            Card.PrintListFancy(allGameCards);
 
             if (!UserInput.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to run the Simulation for:", out cardIndex, 0, allGameCards.Count - 1))
             {

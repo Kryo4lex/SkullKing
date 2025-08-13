@@ -7,7 +7,7 @@ namespace SkullKingCore.Cards.Factory
 {
     public static class CardFactory
     {
-        public static BaseCard Create(CardType cardType, int value = -1)
+        public static Card Create(CardType cardType, int value = -1)
         {
 
             switch (cardType)

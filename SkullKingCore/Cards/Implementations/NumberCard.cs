@@ -3,7 +3,7 @@ using SkullKingCore.GameDefinitions;
 
 namespace SkullKingCore.Cards.Implementations
 {
-    public class NumberCard : BaseCard
+    public class NumberCard : Card
     {
 
         public const int MinValue =  1;

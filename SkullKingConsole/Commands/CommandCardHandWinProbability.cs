@@ -42,16 +42,16 @@ namespace SkullKingConsole.Commands
                 return;
             }
 
-            List<BaseCard> allGameCards = Deck.CreateDeck();
+            List<Card> allGameCards = Deck.CreateDeck();
 
-            List<BaseCard> cardHandToTest = new List<BaseCard>();
+            List<Card> cardHandToTest = new List<Card>();
 
             for (int cardsOnHandCounter = 0; cardsOnHandCounter < cardsOnHandCount; cardsOnHandCounter++)
             {
 
                 int cardIndex = 0;
 
-                BaseCard.PrintListFancy(allGameCards);
+                Card.PrintListFancy(allGameCards);
 
                 if (!UserInput.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to add to the hand {cardsOnHandCounter + 1}/{cardsOnHandCount}:", out cardIndex, 0, allGameCards.Count - 1))
                 {
@@ -70,7 +70,7 @@ namespace SkullKingConsole.Commands
             Logger.Instance.WriteToConsoleAndLog($"N Simulations: {nSimulations}");
             Logger.Instance.WriteToConsoleAndLog($"Max Parallel Threads: {maxParallelThreads}");
             Logger.Instance.WriteToConsoleAndLog($"Selected Cards:");
-            BaseCard.PrintListFancy(cardHandToTest);
+            Card.PrintListFancy(cardHandToTest);
 
             CardHandWinProbability cardHandWinProbability = new CardHandWinProbability(cardHandToTest, playerCount, nSimulations);
 

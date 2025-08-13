@@ -4,7 +4,7 @@ using SkullKingCore.GameDefinitions;
 namespace SkullKingCore.Cards.Implementations
 {
 
-    public class SkullKingCard : BaseCard
+    public class SkullKingCard : Card
     {
 
         public SkullKingCard() : base(CardType.SKULL_KING)

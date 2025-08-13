@@ -4,7 +4,7 @@ using SkullKingCore.GameDefinitions.SubCardTypes;
 
 namespace SkullKingCore.Cards.Implementations
 {
-    public class PirateCard : BaseCard
+    public class PirateCard : Card
     {
 
         public PirateType PirateType { get; private set; }

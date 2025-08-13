@@ -2,7 +2,7 @@
 
 namespace SkullKingCore.Cards.Implementations
 {
-    public class LootCard : BaseCard
+    public class LootCard : Card
     {
         public LootCard() : base(GameDefinitions.CardType.LOOT)
         {

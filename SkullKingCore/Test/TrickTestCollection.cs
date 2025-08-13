@@ -57,7 +57,7 @@ namespace SkullKingCore.Test
             {
                 //0x distinguishes Tricks of English rule book, which seems to be different from the German one...
 
-                new TrickTest("0A", new List<BaseCard>
+                new TrickTest("0A", new List<Card>
                 {
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW,  2),
@@ -65,14 +65,14 @@ namespace SkullKingCore.Test
                     new NumberCard(CardType.BLACK,   4),//Winner, black is stronger than other suit/color cards
                 }, 3),
 
-                new TrickTest("0B", new List<BaseCard>
+                new TrickTest("0B", new List<Card>
                 {
                     new NumberCard(CardType.YELLOW,  12),//Winner, leading color and highest value of colors
                     new NumberCard(CardType.YELLOW,   5),
                     new NumberCard(CardType.LILA,    14),
                 }, 0),
 
-                new TrickTest("0C", new List<BaseCard>
+                new TrickTest("0C", new List<Card>
                 {
                     new NumberCard(CardType.YELLOW,  12),
                     new NumberCard(CardType.YELLOW,   5),
@@ -80,7 +80,7 @@ namespace SkullKingCore.Test
                 }, 2),
 
                 //"Farbkarten", page 8, bottom
-                new TrickTest("1", new List<BaseCard>
+                new TrickTest("1", new List<Card>
                 {
                     new NumberCard(CardType.GREEN,  7),
                     new NumberCard(CardType.GREEN, 12),//Winner
@@ -88,7 +88,7 @@ namespace SkullKingCore.Test
                 }, 1),
 
                 //"Farbkarten", page 9, top
-                new TrickTest("2", new List<BaseCard>
+                new TrickTest("2", new List<Card>
                 {
                     new NumberCard(CardType.YELLOW,  8),//Winner
                     new NumberCard(CardType.YELLOW,  5),
@@ -96,7 +96,7 @@ namespace SkullKingCore.Test
                 }, 0),
 
                 //"Farbkarten", page 9, bottom
-                new TrickTest("3", new List<BaseCard>
+                new TrickTest("3", new List<Card>
                 {
                     new NumberCard(CardType.YELLOW, 12),
                     new NumberCard(CardType.BLACK,   5),
@@ -105,7 +105,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 10, "Flucht", Logbuch des Kapitäns
                 //All cards are Escape cards (Flucht)
-                new TrickTest("4", new List<BaseCard>
+                new TrickTest("4", new List<Card>
                 {
                     new EscapeCard(),//Winner, because first Escape card played
                     new EscapeCard(),
@@ -114,7 +114,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 10, "Charaktere", "Piraten"
                 //Pirates beat Escape, Color Card, incl. Trump, and Mermaids
-                new TrickTest("5", new List<BaseCard>
+                new TrickTest("5", new List<Card>
                 {
                     new EscapeCard(),
                     new NumberCard(CardType.LILA,   14),
@@ -127,7 +127,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 10, "Charaktere", "Piraten"
                 //All cards are Pirates
-                new TrickTest("6", new List<BaseCard>
+                new TrickTest("6", new List<Card>
                 {
                     new PirateCard(PirateType.BENDT_THE_BANDIT),//Winner, because first Pirate card played
                     new PirateCard(PirateType.HARRY_THE_GIANT),
@@ -138,7 +138,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 11, "Charaktere", "Skull King"
                 //The scourge of the seas is the trump of Pirates and beats all numbered cards and Pirates(including the Tigress, when played as a Pirate).
-                new TrickTest("7", new List<BaseCard>
+                new TrickTest("7", new List<Card>
                 {
                     new EscapeCard(),
                     new NumberCard(CardType.LILA,   14),
@@ -151,7 +151,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 11, "Charaktere", "Skull King"
                 //The only ones who can defeat him are the Mermaids, luring him into the sea with their precious treasure.
-                new TrickTest("8", new List<BaseCard>
+                new TrickTest("8", new List<Card>
                 {
                     new EscapeCard(),
                     new NumberCard(CardType.LILA,   14),
@@ -164,7 +164,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 11, "Charaktere", "Mermaid"
                 //Mermaids beat all numbered suits
-                new TrickTest("9", new List<BaseCard>
+                new TrickTest("9", new List<Card>
                 {
                     new EscapeCard(),
                     new NumberCard(CardType.LILA,   14),
@@ -176,7 +176,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 11, "Charaktere", "Mermaid"
                 //...but lose to all of the Pirates
-                new TrickTest("10", new List<BaseCard>
+                new TrickTest("10", new List<Card>
                 {
                     new EscapeCard(),
                     new NumberCard(CardType.LILA,   14),
@@ -189,7 +189,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 11, "Charaktere", "Mermaid"
                 //If both Mermaids end up in the same trick, the first one played wins the trick.
-                new TrickTest("11", new List<BaseCard>
+                new TrickTest("11", new List<Card>
                 {
                     new EscapeCard(),
                     new NumberCard(CardType.LILA,   14),
@@ -203,7 +203,7 @@ namespace SkullKingCore.Test
 
                 //"Sonderkarten", page 11, "Charaktere", "Mermaid"
                 //Captain’s Log: If a Pirate, the Skull King, and a Mermaid are all played in the same trick, the Mermaid always wins the trick, regardless of order of play. 
-                new TrickTest("12", new List<BaseCard>
+                new TrickTest("12", new List<Card>
                 {
                     new EscapeCard(),
                     new NumberCard(CardType.LILA,   14),
@@ -218,7 +218,7 @@ namespace SkullKingCore.Test
 
                 // page 12, "Sonderkarten", "Sonderkarten anspielen", "Fluchtkarte anspielen"
                 // page 12, "Special Cards, "Leading with Special Cards", "Leading with an Escape"
-                new TrickTest("13", new List<BaseCard>
+                new TrickTest("13", new List<Card>
                 {
                     new EscapeCard(),
                     new NumberCard(CardType.LILA, 11),
@@ -226,35 +226,35 @@ namespace SkullKingCore.Test
                 }, 1),
 
                 // page 12, "Special Cards, "Leading with Special Cards", "Leading with a Character"
-                new TrickTest("14", new List<BaseCard>
+                new TrickTest("14", new List<Card>
                 {
                     new PirateCard(PirateType.JUANITA_JADE),//Winner
                     new NumberCard(CardType.GREEN, 9),
                     new NumberCard(CardType.LILA,  9),
                 }, 0),
 
-                new TrickTest("15", new List<BaseCard>
+                new TrickTest("15", new List<Card>
                 {
                     new MermaidCard(MermaidType.ALYRA),//Winner
                     new NumberCard(CardType.GREEN, 9),
                     new NumberCard(CardType.LILA,  9),
                 }, 0),
 
-                new TrickTest("16", new List<BaseCard>
+                new TrickTest("16", new List<Card>
                 {
                     new SkullKingCard(),//Winner
                     new NumberCard(CardType.GREEN, 9),
                     new NumberCard(CardType.LILA,  9),
                 }, 0),
 
-                new TrickTest("17", new List<BaseCard>
+                new TrickTest("17", new List<Card>
                 {
                     new WhiteWhaleCard(),
                     new NumberCard(CardType.GREEN, 9),//Winner, First played
                     new NumberCard(CardType.LILA,  9),
                 }, 1),
 
-                new TrickTest("18", new List<BaseCard>
+                new TrickTest("18", new List<Card>
                 {
                     new NumberCard(CardType.LILA,   8),
                     new NumberCard(CardType.BLACK, 10),//Winner, highest value
@@ -263,7 +263,7 @@ namespace SkullKingCore.Test
                 }, 1),
 
                 // page 24, "Weißer Wal", example
-                new TrickTest("19", new List<BaseCard>
+                new TrickTest("19", new List<Card>
                 {
                     new NumberCard(CardType.BLACK,   2),
                     new NumberCard(CardType.YELLOW, 14),//Winner, highest value
@@ -272,7 +272,7 @@ namespace SkullKingCore.Test
                 }, 1),
 
                 //White Whale, but all played cards are only Special cards
-                new TrickTest("20", new List<BaseCard>
+                new TrickTest("20", new List<Card>
                 {
                     new EscapeCard(),
                     new MermaidCard(MermaidType.ALYRA),
@@ -281,7 +281,7 @@ namespace SkullKingCore.Test
                     new WhiteWhaleCard(),
                 }, null),//no winner
 
-                new TrickTest("20", new List<BaseCard>
+                new TrickTest("20", new List<Card>
                 {
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.LILA,   14),
@@ -295,14 +295,14 @@ namespace SkullKingCore.Test
                 }, null),//no winner
 
                 //White Whale first played before Kraken, but Kraken destroys
-                new TrickTest("21", new List<BaseCard>
+                new TrickTest("21", new List<Card>
                 {
                     new WhiteWhaleCard(),
                     new KrakenCard(),
                 }, null),
 
                 //Kraken first played before White Whale, but White Whale destroys -> White Whale effect is applied
-                new TrickTest("22", new List<BaseCard>
+                new TrickTest("22", new List<Card>
                 {
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.LILA,   13),
@@ -312,7 +312,7 @@ namespace SkullKingCore.Test
                     new WhiteWhaleCard(),
                 }, 0),
 
-                new TrickTest("23", new List<BaseCard>
+                new TrickTest("23", new List<Card>
                 {
                     new NumberCard(CardType.GREEN,   1),
                     new NumberCard(CardType.BLACK,   2),
@@ -322,29 +322,45 @@ namespace SkullKingCore.Test
                     new WhiteWhaleCard(),
                 }, 2),
 
-                new TrickTest("24", new List<BaseCard>
+                new TrickTest("24", new List<Card>
                 {
                     new NumberCard(CardType.GREEN,  2),
                     new NumberCard(CardType.BLACK, 14),// Winner, brcause
                     new WhiteWhaleCard(),
                 }, 1),
 
-                new TrickTest("25", new List<BaseCard>
+                new TrickTest("25", new List<Card>
                 {
                     new NumberCard(CardType.GREEN, 14),
                     new NumberCard(CardType.BLACK,  1),// Winner, trump card
                 }, 1),
 
-                new TrickTest("26", new List<BaseCard>
+                new TrickTest("26", new List<Card>
                 {
                     new PirateCard(PirateType.BENDT_THE_BANDIT),// Winner
                     new MermaidCard(MermaidType.ALYRA),
                 }, 0),
 
-                new TrickTest("27", new List<BaseCard>
+                new TrickTest("27", new List<Card>
                 {
                     new SkullKingCard(),// Winner
                     new MermaidCard(MermaidType.ALYRA),
+                }, 1),
+
+                new TrickTest("28", new List<Card>
+                {
+                    new NumberCard(CardType.BLACK,   7),//Winner
+                    new NumberCard(CardType.YELLOW,  8),
+                    new NumberCard(CardType.BLACK,   4),
+                    new NumberCard(CardType.YELLOW,  2),
+                }, 0),
+
+                new TrickTest("29", new List<Card>
+                {
+                    new NumberCard(CardType.YELLOW,  2),
+                    new NumberCard(CardType.BLACK,   7),//Winner
+                    new NumberCard(CardType.YELLOW,  8),
+                    new NumberCard(CardType.BLACK,   4),
                 }, 1),
             };
         }

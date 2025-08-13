@@ -3,7 +3,7 @@ using SkullKingCore.GameDefinitions;
 
 namespace SkullKingCore.Cards.Implementations
 {
-    public class TigressCard : BaseCard
+    public class TigressCard : Card
     {
 
         public CardType PlayedAsType { get; set; }

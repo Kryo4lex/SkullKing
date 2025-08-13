@@ -40,7 +40,7 @@ namespace SkullKingConsole.Commands
             Logger.Instance.WriteToConsoleAndLog($"N Simulations: {nSimulations}");
             Logger.Instance.WriteToConsoleAndLog($"Max Parallel Threads: {maxParallelThreads}");
 
-            List<BaseCard> allGameCards = Deck.CreateDeck();
+            List<Card> allGameCards = Deck.CreateDeck();
             List<SingleCardWinProbability> singleCardWinProbabilities = new List<SingleCardWinProbability>();
 
             Stopwatch totalTimeSingleCardWinProbabilityRun = Stopwatch.StartNew();

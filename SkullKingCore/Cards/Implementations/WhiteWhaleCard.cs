@@ -2,7 +2,7 @@
 
 namespace SkullKingCore.Cards.Implementations
 {
-    public class WhiteWhaleCard : BaseCard
+    public class WhiteWhaleCard : Card
     {
         public WhiteWhaleCard() : base(GameDefinitions.CardType.WHITE_WHALE)
         {

@@ -9,17 +9,17 @@ namespace SkullKingCore.Test
 
         public string TestCaseName { get; }
 
-        public List<BaseCard> Trick { get; }
+        public List<Card> Trick { get; }
 
         public int? ExpectedWinnerIndex { get; }
 
         public int? WinnerIndex { get; private set; }
 
-        public BaseCard WinnerCard { get; private set; }
+        public Card WinnerCard { get; private set; }
 
         public TestResult TestResult { get; private set; } = TestResult.OPEN;
 
-        public TrickTest(string testCaseName, List<BaseCard> trick, int? expectedWinnerIndex)
+        public TrickTest(string testCaseName, List<Card> trick, int? expectedWinnerIndex)
         { 
             TestCaseName = testCaseName;
             Trick = trick;

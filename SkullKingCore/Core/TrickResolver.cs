@@ -10,16 +10,6 @@ namespace SkullKingCore.Core
     /// </summary>
     public static class TrickResolver
     {
-        /// <summary>
-        /// Returns the winning card from the given list of played cards.
-        /// </summary>
-        /// <param name="cardsPlayed">Cards in the order they were played.</param>
-        /// <returns>The winning card, or null if the trick is cancelled (e.g., by Kraken).</returns>
-        public static BaseCard? DetermineTrickWinnerCard(List<BaseCard> cardsPlayed)
-        {
-            var indexOfWinningCard = DetermineTrickWinnerIndex(cardsPlayed);
-            return indexOfWinningCard.HasValue ? cardsPlayed[indexOfWinningCard.Value] : null;
-        }
 
         /// <summary>
         /// Returns the index of the winning card in the played list.
@@ -28,7 +18,7 @@ namespace SkullKingCore.Core
         /// </summary>
         /// <param name="cardsPlayed">Cards in play order.</param>
         /// <returns>Index of winner, or null if no winner (Kraken cancel).</returns>
-        public static int? DetermineTrickWinnerIndex(List<BaseCard> cardsPlayed)
+        public static int? DetermineTrickWinnerIndex(List<Card> cardsPlayed)
         {
             if (cardsPlayed == null || cardsPlayed.Count == 0)
             {
@@ -41,7 +31,7 @@ namespace SkullKingCore.Core
                 .ToList();
 
             // Lead card = first number card, or first card if none are numbers
-            var leadCard = typedCards.FirstOrDefault(x => BaseCard.IsNumberCard(x.Type))?.Card ?? cardsPlayed[0];
+            var leadCard = typedCards.FirstOrDefault(x => Card.IsNumberCard(x.Type))?.Card ?? cardsPlayed[0];
             var leadType = GetEffectiveType(leadCard);
             bool leadIsBlack = leadType == CardType.BLACK;
 
@@ -101,12 +91,60 @@ namespace SkullKingCore.Core
         }
 
         /// <summary>
+        /// Returns the winning card from the given list of played cards.
+        /// </summary>
+        /// <param name="cardsPlayed">Cards in the order they were played.</param>
+        /// <returns>The winning card, or null if the trick is cancelled (e.g., by Kraken).</returns>
+        public static Card? DetermineTrickWinnerCard(List<Card> cardsPlayed)
+        {
+            var indexOfWinningCard = DetermineTrickWinnerIndex(cardsPlayed);
+            return indexOfWinningCard.HasValue ? cardsPlayed[indexOfWinningCard.Value] : null;
+        }
+
+        /// <summary>
+        /// Returns the index of the winning card in the played list, without considering special cards.
+        /// Used to determine, which card would have won the trick under normal circumstances.
+        /// </summary>
+        /// <param name="cardsPlayed">Cards in the order they were played.</param>
+        /// <returns>The winning card, even though if special cards, like the White Whale or Kraken were palyed.</returns>
+        public static int DetermineTrickWinnerIndexNoSpecialCards(List<Card> cardsPlayed)
+        {
+            List<CardType> specialCardsTypes = new List<CardType>
+            {
+                CardType.WHITE_WHALE,
+                CardType.KRAKEN,
+            };
+
+            // Pair each card with its original index, then filter out special cards
+            var indexedCards = cardsPlayed
+                .Select((card, index) => new { Card = card, OriginalIndex = index })
+                .Where(x => !specialCardsTypes.Contains(x.Card.CardType))
+                .ToList();
+
+            //ToDo: check rule validity
+            // If no valid cards remain, return the last played card's original index
+            if (!indexedCards.Any())
+                return cardsPlayed.Count - 1;
+
+            // Determine winner in filtered list
+            int? filteredWinnerIndex = DetermineTrickWinnerIndex(
+                indexedCards.Select(x => x.Card).ToList()
+            );
+
+            if (filteredWinnerIndex == null)
+                throw new Exception("There must be a winner!");
+
+            // Map back to original index
+            return indexedCards[filteredWinnerIndex.Value].OriginalIndex;
+        }
+
+        /// <summary>
         /// Resolves trick when White Whale is played:
         /// Only number cards matter, regardless of color or lead suit.
         /// </summary>
         private static int? ResolveWhiteWhaleTrick(List<CardInfo> cards)
         {
-            var candidates = cards.Where(x => BaseCard.IsNumberCard(x.Type)).ToList();
+            var candidates = cards.Where(x => Card.IsNumberCard(x.Type)).ToList();
             if (!candidates.Any()) return null;
 
             return candidates
@@ -123,7 +161,7 @@ namespace SkullKingCore.Core
         /// </summary>
         private static int? ResolveNumberTrick(List<CardInfo> cards, CardType leadType, bool leadIsBlack)
         {
-            var numberCards = cards.Where(x => BaseCard.IsNumberCard(x.Type)).ToList();
+            var numberCards = cards.Where(x => Card.IsNumberCard(x.Type)).ToList();
             if (!numberCards.Any()) return null;
 
             // Trump rule: any Black card beats other colors
@@ -164,7 +202,7 @@ namespace SkullKingCore.Core
         /// Gets the "effective" type of a card.
         /// For example, Tigress may count as Pirate or Escape depending on play choice.
         /// </summary>
-        private static CardType GetEffectiveType(BaseCard card)
+        private static CardType GetEffectiveType(Card card)
         {
             if (card is TigressCard tigress)
                 return tigress.PlayedAsType;
@@ -175,7 +213,8 @@ namespace SkullKingCore.Core
         /// <summary>
         /// Lightweight record holding card, its play order index, and resolved type.
         /// </summary>
-        private record CardInfo(BaseCard Card, int Index, CardType Type);
+        private record CardInfo(Card Card, int Index, CardType Type);
+
     }
 
 }

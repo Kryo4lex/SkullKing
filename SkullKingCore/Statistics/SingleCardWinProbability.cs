@@ -10,7 +10,7 @@ namespace SkullKingCore.Statistics
     public class SingleCardWinProbability
     {
 
-        public BaseCard CardToTest { get; private set; }
+        public Card CardToTest { get; private set; }
         public int PlayerCount { get; private set; }
         public int NSimulations { get; private set; }
 
@@ -24,7 +24,7 @@ namespace SkullKingCore.Statistics
             }
         }
 
-        public SingleCardWinProbability(BaseCard cardToTest, int playerCount, int nSimulations)
+        public SingleCardWinProbability(Card cardToTest, int playerCount, int nSimulations)
         {
             CardToTest = cardToTest;
             PlayerCount = playerCount;
@@ -36,7 +36,7 @@ namespace SkullKingCore.Statistics
 
             int wins = 0;
 
-            List<BaseCard> deck = Deck.CreateDeck();
+            List<Card> deck = Deck.CreateDeck();
 
             for (int simulationCounter = 0; simulationCounter < NSimulations; simulationCounter++)
             {
@@ -46,18 +46,18 @@ namespace SkullKingCore.Statistics
                 //improves Speed
                 deck.Shuffle(new Random());
 
-                List<BaseCard> trick = new List<BaseCard>();
+                List<Card> trick = new List<Card>();
 
                 for (int j = 0; j < PlayerCount - 1; j++)
                 {
-                    BaseCard c = deck[j];
+                    Card c = deck[j];
                     trick.Add(c);
                 }
 
                 int insertIndex = RandomHelper.RandomInt(0, PlayerCount);
                 trick.Insert(insertIndex, CardToTest);
 
-                BaseCard? winner = TrickResolver.DetermineTrickWinnerCard(trick);
+                Card? winner = TrickResolver.DetermineTrickWinnerCard(trick);
 
                 if (winner == CardToTest)
                 {

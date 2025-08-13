@@ -23,11 +23,11 @@ namespace SkullKingCore.GameLogic
 
         public void Play()
         {
-            List<BaseCard> gameCards = new List<BaseCard>();
+            List<Card> gameCards = new List<Card>();
 
             gameCards = Deck.CreateDeck();
 
-            List<BaseCard> shuffledGameCards = gameCards.ToList().Shuffle(Seed);
+            List<Card> shuffledGameCards = gameCards.ToList().Shuffle(Seed);
 
             List<Player> players = new List<Player>();
 
@@ -40,14 +40,14 @@ namespace SkullKingCore.GameLogic
                 players.Add(newPlayer);
             }
 
-            List<BaseCard> currentTrick = new List<BaseCard>();
+            List<Card> currentTrick = new List<Card>();
 
             Logger.Instance.WriteToConsoleAndLog($"Seed: {Seed}");
             Logger.Instance.WriteToConsoleAndLog($"");
 
             foreach (Player player in players)
             {
-                BaseCard playedCardOfPlayer = player.CurrentCards.TakeChunk(1).First();
+                Card playedCardOfPlayer = player.CurrentCards.TakeChunk(1).First();
 
                 currentTrick.Add(playedCardOfPlayer);
 
@@ -64,7 +64,7 @@ namespace SkullKingCore.GameLogic
             }
             else
             {
-                BaseCard winningCard = currentTrick[(int)indexOfWinningCard];
+                Card winningCard = currentTrick[(int)indexOfWinningCard];
 
                 Logger.Instance.WriteToConsoleAndLog("");
                 Logger.Instance.WriteToConsoleAndLog("Winner:");

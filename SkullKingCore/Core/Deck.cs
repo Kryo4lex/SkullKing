@@ -25,16 +25,16 @@ namespace SkullKingCore.GameDefinitions
             new CardTypeCardAmountPair(CardType.WHITE_WHALE, 1 ),
         };
 
-        public static List<BaseCard> CreateDeck()
+        public static List<Card> CreateDeck()
         {
 
-            List<BaseCard> gameCards = new List<BaseCard>();
+            List<Card> gameCards = new List<Card>();
 
             foreach (CardTypeCardAmountPair cardTypeCardAmountPair in Deck.GameCardComposition)
             {
                 for (int cardTypeElementCounter = 1; cardTypeElementCounter <= cardTypeCardAmountPair.CardAmount; cardTypeElementCounter++)
                 {
-                    BaseCard newCard = CardFactory.Create(cardTypeCardAmountPair.CardType, cardTypeElementCounter);
+                    Card newCard = CardFactory.Create(cardTypeCardAmountPair.CardType, cardTypeElementCounter);
 
                     gameCards.Add(newCard);
                 }

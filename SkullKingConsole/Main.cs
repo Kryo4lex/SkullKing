@@ -1,4 +1,7 @@
 ﻿using SkullKingConsole.Commands;
+using SkullKingConsole.Controller;
+using SkullKingCore.Core.Game;
+using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Logging;
 using SkullKingCore.Utility.UserInput;
 
@@ -18,14 +21,23 @@ namespace SkullKingConsole
             { 6, ($"Trick Simulation", CommandTrickSimulation.Run) },
         };
 
-        static bool running = true;
-
         public static void Main(string[] args)
         {
 
             Logger.Instance.Initialize($"{nameof(SkullKingConsole)}_log.txt");
 
-            while (running)
+            while (true)
+            {
+
+                ConsoleCPUControllerTest();
+
+                Console.ReadLine();
+
+            }
+
+            return;
+            
+            while (true)
             {
 
                 PrintOptions();
@@ -54,6 +66,33 @@ namespace SkullKingConsole
 
         }
 
+        private static async void ConsoleCPUControllerTest()
+        {
+
+            // 1. Create players
+            var players = new List<Player>();
+
+            for (int i = 1; i <= 4; i++)
+            {
+                Player player = new Player($"{i}", $"CPU_{i}");
+
+                players.Add(player);
+            }
+
+            // 2. Create controllers for each player
+            var controllers = new Dictionary<string, IGameController>();
+            foreach (var player in players)
+            {
+                controllers[player.Id] = new ConsoleCPUController(player.Name);
+            }
+
+            // 3. Create the game state with, e.g., 5 rounds
+            var gameState = new GameState(players, startRound: 5, maxRounds: 5, controllers);
+
+            // 4. Run the game
+            await gameState.RunGameAsync();
+        }
+
         private static void PrintOptions()
         {
 
@@ -68,7 +107,7 @@ namespace SkullKingConsole
         {
 
             Logger.Instance.WriteToConsoleAndLog("Exiting...");
-            running = false;
+            Environment.Exit(0);
 
         }
 

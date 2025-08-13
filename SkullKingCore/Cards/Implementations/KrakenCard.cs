@@ -2,7 +2,7 @@
 
 namespace SkullKingCore.Cards.Implementations
 {
-    public class KrakenCard : BaseCard
+    public class KrakenCard : Card
     {
         public KrakenCard() : base(GameDefinitions.CardType.KRAKEN)
         {

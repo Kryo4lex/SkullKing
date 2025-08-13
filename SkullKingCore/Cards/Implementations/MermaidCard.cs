@@ -5,7 +5,7 @@ using SkullKingCore.GameDefinitions.SubCardTypes;
 namespace SkullKingCore.Cards.Implementations
 {
 
-    public class MermaidCard : BaseCard
+    public class MermaidCard : Card
     {
         public MermaidType MermaidType { get; private set; }
 

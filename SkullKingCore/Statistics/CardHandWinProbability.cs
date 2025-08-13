@@ -18,7 +18,7 @@ namespace SkullKingCore.Statistics
 
         private static readonly Random rng = new Random();
 
-        public List<BaseCard> CardHandToTest { get; private set; }
+        public List<Card> CardHandToTest { get; private set; }
 
         public int PlayerCount { get; private set; }
 
@@ -41,7 +41,7 @@ namespace SkullKingCore.Statistics
 
         public double? TricksWon { get; private set; }
 
-        public CardHandWinProbability(List<BaseCard> cardHandToTest, int playerCount, int nSimulations)
+        public CardHandWinProbability(List<Card> cardHandToTest, int playerCount, int nSimulations)
         {
             CardHandToTest = cardHandToTest;
             PlayerCount = playerCount;
@@ -83,23 +83,23 @@ namespace SkullKingCore.Statistics
                 var random = new Random(Guid.NewGuid().GetHashCode());
 
                 // Copy your hand for this simulation (CardsToTest = your known hand)
-                List<BaseCard> playerHand = new List<BaseCard>(CardHandToTest);
+                List<Card> playerHand = new List<Card>(CardHandToTest);
 
                 // Create and shuffle full deck
-                List<BaseCard> deck = Deck.CreateDeck();
+                List<Card> deck = Deck.CreateDeck();
                 deck.Shuffle(random);
 
                 // Remove your cards from the deck to get opponent's card pool
-                List<BaseCard> deckWithoutOwnCards = new List<BaseCard>(deck);
+                List<Card> deckWithoutOwnCards = new List<Card>(deck);
                 RemoveMatchesOneByOne(deckWithoutOwnCards, CardHandToTest);
 
                 // Number of opponents (excluding you)
                 int opponentCount = PlayerCount - 1;
 
                 // Preallocate lists for opponent hands
-                List<BaseCard>[] opponentHands = new List<BaseCard>[opponentCount];
+                List<Card>[] opponentHands = new List<Card>[opponentCount];
                 for (int i = 0; i < opponentCount; i++)
-                    opponentHands[i] = new List<BaseCard>();
+                    opponentHands[i] = new List<Card>();
 
                 // Deal remaining cards evenly to opponents
                 // This ensures each opponent has a fixed hand, like in a real round
@@ -117,16 +117,16 @@ namespace SkullKingCore.Statistics
                 while (playerHand.Count > 0)
                 {
                     // Store cards played in this trick
-                    List<BaseCard> trickToTest = new List<BaseCard>(PlayerCount);
+                    List<Card> trickToTest = new List<Card>(PlayerCount);
 
                     // Track which player plays which card
-                    BaseCard[] playedCards = new BaseCard[PlayerCount];
+                    Card[] playedCards = new Card[PlayerCount];
 
                     // Players act in order starting from the current lead
                     for (int i = 0; i < PlayerCount; i++)
                     {
                         int currentPlayer = (leadPlayer + i) % PlayerCount;
-                        BaseCard cardPlayed;
+                        Card cardPlayed;
 
                         if (currentPlayer == 0)
                         {
@@ -149,7 +149,7 @@ namespace SkullKingCore.Statistics
                     }
 
                     // Determine trick winner
-                    BaseCard? winnerCard = TrickResolver.DetermineTrickWinnerCard(trickToTest);
+                    Card? winnerCard = TrickResolver.DetermineTrickWinnerCard(trickToTest);
 
                     // If trick is a draw, keep the same lead and continue
                     if (winnerCard == null)
@@ -159,7 +159,7 @@ namespace SkullKingCore.Statistics
                     int winnerPlayer = -1;
                     for (int p = 0; p < PlayerCount; p++)
                     {
-                        BaseCard pc = playedCards[p];
+                        Card pc = playedCards[p];
                         if (pc.CardType == winnerCard.CardType && pc.GenericValue == winnerCard.GenericValue)
                         {
                             winnerPlayer = p;
@@ -189,7 +189,7 @@ namespace SkullKingCore.Statistics
             TricksWon = WinRate * Rounds;
         }
 
-        public static void RemoveMatchesOneByOne(List<BaseCard> bigList, List<BaseCard> smallList)
+        public static void RemoveMatchesOneByOne(List<Card> bigList, List<Card> smallList)
         {
             foreach (var item in smallList)
             {
@@ -220,7 +220,7 @@ namespace SkullKingCore.Statistics
             Logger.Instance.WriteToConsoleAndLog(headerLine);
             Logger.Instance.WriteToConsoleAndLog(separator);
 
-            foreach (BaseCard card in CardHandToTest)
+            foreach (Card card in CardHandToTest)
             {
                 string line = $"| {card.CardType.ToString().PadRight(maxLengthCardType)} " +
                               $"| {card.SubType().PadRight(maxLengthSubType)} |";

@@ -19,7 +19,7 @@ namespace SkullKingCore.Statistics
 
             int decimalPlaces = 5;
 
-            List<BaseCard> allGameCards = new List<BaseCard>();
+            List<Card> allGameCards = new List<Card>();
 
             allGameCards = Deck.CreateDeck();
 
@@ -36,7 +36,7 @@ namespace SkullKingCore.Statistics
             for (int allGameCardsCounter = 0; allGameCardsCounter < allGameCards.Count; allGameCardsCounter++)
             {
 
-                List<BaseCard> opposingCards = Deck.CreateDeck();
+                List<Card> opposingCards = Deck.CreateDeck();
 
                 opposingCards.RemoveAt(allGameCardsCounter);
 
@@ -101,13 +101,13 @@ namespace SkullKingCore.Statistics
         public class GeneralCardMightinessResult
         {
 
-            public BaseCard CardToTest { get; private set; }
-            public List<BaseCard> OpposingCards { get; private set; }
+            public Card CardToTest { get; private set; }
+            public List<Card> OpposingCards { get; private set; }
 
             public double BestCaseProbability { get; private set; }
             public double WorstCaseProbability { get; private set; }
 
-            public GeneralCardMightinessResult(BaseCard cardToTest, List<BaseCard> opposingCards)
+            public GeneralCardMightinessResult(Card cardToTest, List<Card> opposingCards)
             {
                 CardToTest = cardToTest;
                 OpposingCards = opposingCards;
@@ -122,7 +122,7 @@ namespace SkullKingCore.Statistics
                 for (int opposingCardCounter = 0; opposingCardCounter < OpposingCards.Count; opposingCardCounter++)
                 {
                     TrickTest trickTestBestCase = new TrickTest("",
-                    new List<BaseCard>()
+                    new List<Card>()
                     {
                         CardToTest,
                         OpposingCards[opposingCardCounter],
@@ -132,7 +132,7 @@ namespace SkullKingCore.Statistics
                     trickTestBestCase.Test();
 
                     TrickTest trickWorstBestCase = new TrickTest("",
-                    new List<BaseCard>()
+                    new List<Card>()
                     {
                         OpposingCards[opposingCardCounter],
                         CardToTest,

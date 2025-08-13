@@ -6,7 +6,7 @@ namespace SkullKingCore.Core
     {
         public string Name { get; private set; }
 
-        public List<BaseCard> CurrentCards { get; set; } = new List<BaseCard>();
+        public List<Card> CurrentCards { get; set; } = new List<Card>();
 
         public Player(string name)
         {
