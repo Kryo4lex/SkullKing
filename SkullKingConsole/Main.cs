@@ -73,14 +73,16 @@ namespace SkullKingConsole
             // 1. Create players
             var players = new List<Player>();
 
-            for (int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 1; i++)
             {
                 Player player = new Player($"{i}", $"CPU_{i}");
 
                 players.Add(player);
             }
 
-            players.Add(new Player("",""));
+            Player humanPlayer = new Player("Human", "Human");
+
+            players.Add(humanPlayer);
 
             // 2. Create controllers for each player
             var controllers = new Dictionary<string, IGameController>();
@@ -88,6 +90,8 @@ namespace SkullKingConsole
             {
                 controllers[player.Id] = new LocalConsoleCPUController(player.Name);
             }
+
+            controllers[humanPlayer.Id] = new LocalConsoleHumanController(humanPlayer.Name);
 
             // 3. Create the game state with, e.g., 5 rounds
             var match = new MatchRunner(players, startRound: 5, maxRounds: 5, controllers);

@@ -77,9 +77,10 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutRoundWinnerAsync(Player? player, Card? winningCard, int round)
+        public Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round)
         {
-
+            //no need to tell console CPU what is happening
+            /*
             if(player == null)
             {
                 Logger.Instance.WriteToConsoleAndLog($"None!");
@@ -88,27 +89,46 @@ namespace SkullKingConsole.Controller
             {
                 Logger.Instance.WriteToConsoleAndLog($"{player.Name} won round {round} with {winningCard}");
             }
+            */
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyAboutSubRoundStartAsync(GameState state)
+        {
+            //no need to tell console CPU what is happening
+            //Logger.Instance.WriteToConsoleAndLog($"Sub round {state.CurrentSubRound}/{state.MaxRounds} started.");
+
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyAboutSubRoundEndAsync(GameState state)
+        {
+            //no need to tell console CPU what is happening
+            //Logger.Instance.WriteToConsoleAndLog($"Sub round {state.CurrentSubRound}/{state.MaxRounds} ended.");
 
             return Task.CompletedTask;
         }
 
         public Task NotifyBidCollectionStartedAsync(GameState gameState)
         {
-            Logger.Instance.WriteToConsoleAndLog("Collecting bids...");
+            //no need to tell console CPU what is happening
+            //Logger.Instance.WriteToConsoleAndLog("Collecting bids...");
 
             return Task.CompletedTask;
         }
 
         public Task NotifyRoundStartedAsync(GameState gameState)
         {
-            Logger.Instance.WriteToConsoleAndLog($"--- Round {gameState.CurrentRound} ---");
+            //no need to tell console CPU what is happening
+            //Logger.Instance.WriteToConsoleAndLog($"--- Round {gameState.CurrentRound} ---");
 
             return Task.CompletedTask;
         }
 
         public Task NotifyGameEndedAsync(GameState gameState)
         {
-            Logger.Instance.WriteToConsoleAndLog($"--- Game finished ---");
+            //no need to tell console CPU what is happening
+            //Logger.Instance.WriteToConsoleAndLog($"--- Game finished ---");
 
             return Task.CompletedTask;
         }

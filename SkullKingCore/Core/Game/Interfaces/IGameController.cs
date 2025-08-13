@@ -20,7 +20,11 @@ namespace SkullKingCore.Core.Game.Interfaces
 
         Task NotifyCardPlayedAsync(Player player, Card playedCard);
 
-        Task NotifyAboutRoundWinnerAsync(Player? player, Card? winningCard, int round);
+        Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round);
+
+        Task NotifyAboutSubRoundStartAsync(GameState state);
+
+        Task NotifyAboutSubRoundEndAsync(GameState state);
 
         Task NotifyGameEndedAsync(GameState gameState);
 

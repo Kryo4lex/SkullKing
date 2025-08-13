@@ -5,7 +5,9 @@ namespace SkullKingCore.Core.Game
     public class GameState
     {
         public IReadOnlyList<Player> Players { get; }
+        public int StartingPlayerIndex { get; set;  } = 0;
         public int CurrentRound { get; internal set; }
+        public int CurrentSubRound { get; internal set; } = 1;
         public int StartRound { get; }
         public int MaxRounds { get; }
         public List<Card> AllGameCards { get; }

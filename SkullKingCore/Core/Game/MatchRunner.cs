@@ -10,8 +10,6 @@ namespace SkullKingCore.Core.Game
     {
         private readonly GameState _state;
         private readonly Dictionary<string, IGameController> _controllers;
-        private int _startingPlayerIndex = 0;
-        private readonly Random _random = new(1234);
 
         public MatchRunner(List<Player> players, int startRound, int maxRounds, Dictionary<string, IGameController> controllers)
         {
@@ -21,18 +19,39 @@ namespace SkullKingCore.Core.Game
 
         public async Task RunGameAsync()
         {
-            while (!IsGameOver())
+            //CurrentSubRound init = 1 required, CurrentRound can be different
+
+            while (_state.CurrentRound <= _state.MaxRounds)
             {
+
                 await StartRoundAsync();
                 await CollectBidsAsync();
-                await PlayRoundAsync();
-                _state.CurrentRound++;
+
+                // Play sub-rounds for this round
+                while (_state.CurrentSubRound <= _state.CurrentRound)
+                {
+                    // Notify controllers about sub-round start
+                    foreach (var controller in _controllers.Values)
+                    {
+                        await controller.NotifyAboutSubRoundStartAsync(_state);
+                    }
+
+                    await PlaySubRoundAsync();
+
+                    // Notify controllers about sub-round end
+                    foreach (var controller in _controllers.Values)
+                    {
+                        await controller.NotifyAboutSubRoundEndAsync(_state);
+                    }
+
+                    _state.CurrentSubRound++; // increment sub-round
+                }
+
+                _state.CurrentRound++; // increment round
             }
 
             await EndGameAsync();
         }
-
-        private bool IsGameOver() => _state.CurrentRound > _state.MaxRounds;
 
         private async Task StartRoundAsync()
         {
@@ -67,7 +86,7 @@ namespace SkullKingCore.Core.Game
 
             for (int i = 0; i < playerCount; i++)
             {
-                int playerIndex = (_startingPlayerIndex + i) % playerCount;
+                int playerIndex = (_state.StartingPlayerIndex + i) % playerCount;
                 var player = _state.Players[playerIndex];
                 var controller = _controllers[player.Id];
 
@@ -76,20 +95,22 @@ namespace SkullKingCore.Core.Game
             }
         }
 
-        private async Task PlayRoundAsync()
+        private async Task PlaySubRoundAsync()
         {
             List<Card> cardsInPlay = new();
             int playerCount = _state.Players.Count;
 
             for (int i = 0; i < playerCount; i++)
             {
-                int playerIndex = (_startingPlayerIndex + i) % playerCount;
+                int playerIndex = (_state.StartingPlayerIndex + i) % playerCount;
                 var player = _state.Players[playerIndex];
                 var controller = _controllers[player.Id];
 
                 Card card = await controller.RequestCardPlayAsync(_state, player.Hand, Timeout.InfiniteTimeSpan);
 
                 await controller.NotifyCardPlayedAsync(player, card);
+
+                player.Hand.Remove(card);
 
                 cardsInPlay.Add(card);
             }
@@ -110,10 +131,10 @@ namespace SkullKingCore.Core.Game
 
             foreach (var controller in _controllers.Values)
             {
-                await controller.NotifyAboutRoundWinnerAsync(winner, winningCard, _state.CurrentRound);
+                await controller.NotifyAboutSubRoundWinnerAsync(winner, winningCard, _state.CurrentRound);
             }
 
-            _startingPlayerIndex = (_startingPlayerIndex + 1) % playerCount;
+            _state.StartingPlayerIndex = (int)winnerIndex;
         }
 
         private async Task EndGameAsync()

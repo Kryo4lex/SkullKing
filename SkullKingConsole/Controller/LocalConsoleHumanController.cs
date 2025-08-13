@@ -4,6 +4,7 @@ using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
+using SkullKingCore.Utility.UserInput;
 
 namespace SkullKingConsole.Controller
 {
@@ -23,7 +24,16 @@ namespace SkullKingConsole.Controller
         public Task<Card> RequestCardPlayAsync(GameState state, List<Card> hand, TimeSpan maxWait)
         {
 
-            Card? card = hand[_random.Next(hand.Count)];
+            int cardToPlayIndex = 0;
+
+            Card.PrintListFancy(hand);
+
+            while(!UserInput.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to play:", out cardToPlayIndex, 0, hand.Count - 1))
+            {
+
+            }
+
+            Card card = hand[cardToPlayIndex];
 
             //Special Case
             if (card.CardType == CardType.TIGRESS)
@@ -59,7 +69,24 @@ namespace SkullKingConsole.Controller
         public Task<int> RequestBidAsync(GameState gameState, int roundNumber, TimeSpan maxWait)
         {
 
-            int bid = _random.Next(0, roundNumber + 1);
+            var player = gameState.Players.FirstOrDefault(p => p.Name == Name);
+
+            if (player != null)
+            {
+                Logger.Instance.WriteToConsoleAndLog($"Your cards:");
+                Card.PrintListFancy(player.Hand);
+            }
+            else
+            {
+                Logger.Instance.WriteToConsoleAndLog($"Player with name '{Name}' not found.");
+            }
+
+            int bid = 0;
+
+            while (!UserInput.TryReadInt($"{Environment.NewLine}Enter your number of wins prediction:", out bid, 0, roundNumber))
+            {
+
+            }
 
             Logger.Instance.WriteToConsoleAndLog($"{Name} bids {bid}");
 
@@ -77,7 +104,7 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutRoundWinnerAsync(Player? player, Card? winningCard, int round)
+        public Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round)
         {
 
             if(player == null)
@@ -88,6 +115,21 @@ namespace SkullKingConsole.Controller
             {
                 Logger.Instance.WriteToConsoleAndLog($"{player.Name} won round {round} with {winningCard}");
             }
+
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyAboutSubRoundStartAsync(GameState state)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"--- Sub round {state.CurrentSubRound}/{state.MaxRounds} started ---");
+
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyAboutSubRoundEndAsync(GameState state)
+        {
+            //no need to tell console CPU what is happening
+            Logger.Instance.WriteToConsoleAndLog($"--- Sub round {state.CurrentSubRound}/{state.MaxRounds} ended ---");
 
             return Task.CompletedTask;
         }
