@@ -15,7 +15,7 @@ namespace SkullKingCore.Test
 
         public int? WinnerIndex { get; private set; }
 
-        public Card WinnerCard { get; private set; }
+        public Card? WinnerCard { get; private set; }
 
         public TestResult TestResult { get; private set; } = TestResult.OPEN;
 

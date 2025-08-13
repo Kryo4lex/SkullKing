@@ -6,7 +6,7 @@ namespace SkullKingCore.Core.Game
     {
         public string Id { get; }
         public string Name { get; }
-        public List<Card> Hand { get; } = new();
+        public List<Card> Hand { get; set; } = new();
         public int Score { get; set; }
 
         // Track bids per round

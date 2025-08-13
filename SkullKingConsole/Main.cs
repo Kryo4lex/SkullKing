@@ -29,7 +29,8 @@ namespace SkullKingConsole
             while (true)
             {
 
-                ConsoleCPUControllerTest();
+                //ConsoleCPUControllerTest();
+                ConsoleCPUAndHumanControllerTest();
 
                 Console.ReadLine();
 
@@ -66,10 +67,39 @@ namespace SkullKingConsole
 
         }
 
-        private static async void ConsoleCPUControllerTest()
+        private static async void ConsoleCPUAndHumanControllerTest()
         {
 
             // 1. Create players
+            var players = new List<Player>();
+
+            for (int i = 1; i <= 3; i++)
+            {
+                Player player = new Player($"{i}", $"CPU_{i}");
+
+                players.Add(player);
+            }
+
+            players.Add(new Player("",""));
+
+            // 2. Create controllers for each player
+            var controllers = new Dictionary<string, IGameController>();
+            foreach (var player in players)
+            {
+                controllers[player.Id] = new LocalConsoleCPUController(player.Name);
+            }
+
+            // 3. Create the game state with, e.g., 5 rounds
+            var match = new MatchRunner(players, startRound: 5, maxRounds: 5, controllers);
+
+            // 4. Run the game
+            await match.RunGameAsync();
+        }
+
+        private static async void ConsoleCPUControllerTest()
+        {
+
+            // 1. Create playersS
             var players = new List<Player>();
 
             for (int i = 1; i <= 4; i++)
@@ -87,10 +117,10 @@ namespace SkullKingConsole
             }
 
             // 3. Create the game state with, e.g., 5 rounds
-            var gameState = new MatchRunner(players, startRound: 5, maxRounds: 5, controllers);
+            MatchRunner match = new MatchRunner(players, startRound: 5, maxRounds: 5, controllers);
 
             // 4. Run the game
-            await gameState.RunGameAsync();
+            await match.RunGameAsync();
         }
 
         private static void PrintOptions()

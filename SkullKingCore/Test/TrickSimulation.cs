@@ -1,6 +1,6 @@
 ﻿using SkullKingCore.Cards.Base;
-using SkullKingCore.Cards.Factory;
 using SkullKingCore.Core;
+using SkullKingCore.Core.Game;
 using SkullKingCore.Extensions;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
@@ -33,9 +33,9 @@ namespace SkullKingCore.Test
 
             for (int playerCounter = 0; playerCounter < PlayerCount; playerCounter++)
             {
-                Player newPlayer = new Player($"Player_{playerCounter + 1}");
+                Player newPlayer = new Player($"Player_{playerCounter + 1}", $"Player_{playerCounter + 1}");
 
-                newPlayer.CurrentCards = shuffledGameCards.TakeChunk(CurrentRound);
+                newPlayer.Hand = shuffledGameCards.TakeChunk(CurrentRound);
 
                 players.Add(newPlayer);
             }
@@ -47,7 +47,7 @@ namespace SkullKingCore.Test
 
             foreach (Player player in players)
             {
-                Card playedCardOfPlayer = player.CurrentCards.TakeChunk(1).First();
+                Card playedCardOfPlayer = player.Hand.TakeChunk(1).First();
 
                 currentTrick.Add(playedCardOfPlayer);
 
