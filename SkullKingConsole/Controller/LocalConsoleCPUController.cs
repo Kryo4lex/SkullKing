@@ -1,4 +1,5 @@
 ﻿using SkullKingCore.Cards.Base;
+using SkullKingCore.Cards.Implementations;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
@@ -23,6 +24,20 @@ namespace SkullKingConsole.Controller
         {
 
             Card? card = hand[_random.Next(hand.Count)];
+
+            //Special Case
+            if (card.CardType == CardType.TIGRESS)
+            {
+
+                List<CardType> availableOptions = new List<CardType>()
+                {
+                    CardType.ESCAPE,
+                    CardType.PIRATE,
+                };
+
+                ((TigressCard)card).PlayedAsType = availableOptions[_random.Next(availableOptions.Count)];
+
+            }
 
             Logger.Instance.WriteToConsoleAndLog($"{Name} plays {card}");
 
@@ -52,15 +67,56 @@ namespace SkullKingConsole.Controller
 
         }
 
-        public Task<CardType> RequestTigressTypeAsync(GameState gameState, TimeSpan maxWait)
+        public Task NotifyCardPlayedAsync(Player player, Card playedCard)
+        {
+            /*
+            string opponentPlayerName = gameState.Players.FirstOrDefault(x => x.Id == playerID).Name;
+
+            Logger.Instance.WriteToConsoleAndLog($"{Name} played {playedCard}");
+            */
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyAboutRoundWinnerAsync(Player? player, Card? winningCard, int round)
         {
 
-            List<CardType> availableOptions = new List<CardType>();
-            availableOptions.Add(CardType.ESCAPE);
-            availableOptions.Add(CardType.PIRATE);
+            if(player == null)
+            {
+                Logger.Instance.WriteToConsoleAndLog($"None!");
+            }
+            else
+            {
+                Logger.Instance.WriteToConsoleAndLog($"{player.Name} won round {round} with {winningCard}");
+            }
 
-            return Task.FromResult(availableOptions[_random.Next(availableOptions.Count)]);
+            return Task.CompletedTask;
+        }
 
+        public Task NotifyBidCollectionStartedAsync(GameState gameState)
+        {
+            Logger.Instance.WriteToConsoleAndLog("Collecting bids...");
+
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyRoundStartedAsync(GameState gameState)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"--- Round {gameState.CurrentRound} ---");
+
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyGameEndedAsync(GameState gameState)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"--- Game finished ---");
+
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyAboutGameWinnerAsync(GameState gameState, List<Player> winners)
+        {
+
+            return Task.CompletedTask;
         }
 
     }

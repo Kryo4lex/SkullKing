@@ -2,7 +2,6 @@
 using SkullKingCore.Cards.Implementations;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.GameDefinitions.SubCardTypes;
-using SkullKingCore.GameLogic;
 using SkullKingCore.Logging;
 using System.Collections.Generic;
 

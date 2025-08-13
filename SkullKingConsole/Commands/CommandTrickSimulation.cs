@@ -1,6 +1,6 @@
 ﻿using SkullKingCore.Logging;
-using SkullKingCore.Test;
 using SkullKingCore.Utility.UserInput;
+using SkullKingCore.Test;
 
 namespace SkullKingConsole.Commands
 {

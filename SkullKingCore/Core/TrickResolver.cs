@@ -102,17 +102,17 @@ namespace SkullKingCore.Core
         }
 
         /// <summary>
-        /// Returns the index of the winning card in the played list, without considering special cards.
+        /// Returns the index of the winning card in the played list, without considering special cards, that destroy the Trick, like the Kraken.
         /// Used to determine, which card would have won the trick under normal circumstances.
         /// </summary>
         /// <param name="cardsPlayed">Cards in the order they were played.</param>
-        /// <returns>The winning card, even though if special cards, like the White Whale or Kraken were palyed.</returns>
+        /// <returns>The winning card, even though if special cards, like the Kraken were played, which destroy the Trick.</returns>
         public static int DetermineTrickWinnerIndexNoSpecialCards(List<Card> cardsPlayed)
         {
             List<CardType> specialCardsTypes = new List<CardType>
             {
-                CardType.WHITE_WHALE,
-                CardType.KRAKEN,
+                //CardType.WHITE_WHALE,//White Whale does not destroy Trick
+                CardType.KRAKEN,//Only Kraken destroys the Trick and 
             };
 
             // Pair each card with its original index, then filter out special cards

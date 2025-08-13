@@ -87,7 +87,7 @@ namespace SkullKingConsole
             }
 
             // 3. Create the game state with, e.g., 5 rounds
-            var gameState = new GameState(players, startRound: 5, maxRounds: 5, controllers);
+            var gameState = new MatchRunner(players, startRound: 5, maxRounds: 5, controllers);
 
             // 4. Run the game
             await gameState.RunGameAsync();

@@ -1,5 +1,4 @@
 ﻿using SkullKingCore.Cards.Base;
-using SkullKingCore.GameDefinitions;
 
 namespace SkullKingCore.Core.Game.Interfaces
 {
@@ -9,12 +8,23 @@ namespace SkullKingCore.Core.Game.Interfaces
 
         string Name { get; }
 
+        Task NotifyRoundStartedAsync(GameState gameState);
+
+        Task NotifyBidCollectionStartedAsync(GameState gameState);
+
+
         Task<int> RequestBidAsync(GameState gameState, int roundNumber, TimeSpan maxWait);
 
-        // Called during a trick to get the player's card choice
         Task<Card> RequestCardPlayAsync(GameState state, List<Card> hand, TimeSpan maxWait);
 
-        Task<CardType> RequestTigressTypeAsync(GameState gameState, TimeSpan maxWait);
+
+        Task NotifyCardPlayedAsync(Player player, Card playedCard);
+
+        Task NotifyAboutRoundWinnerAsync(Player? player, Card? winningCard, int round);
+
+        Task NotifyGameEndedAsync(GameState gameState);
+
+        Task NotifyAboutGameWinnerAsync(GameState gameState, List<Player> winners);
 
         Task ShowMessageAsync(string message);
 

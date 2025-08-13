@@ -10,7 +10,10 @@ namespace SkullKingCore.Core.Game
         public int Score { get; set; }
 
         // Track bids per round
-        public Dictionary<int, int> Bids { get; } = new();
+        public record Round(int Value);
+        public record PredictedWins(int Value);
+
+        public Dictionary<Round, PredictedWins> Bids { get; } = new();
 
         public Player(string id, string name)
         {
