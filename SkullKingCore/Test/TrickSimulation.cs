@@ -5,7 +5,7 @@ using SkullKingCore.Extensions;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 
-namespace SkullKingCore.GameLogic
+namespace SkullKingCore.Test
 {
     public class TrickSimulation
     {

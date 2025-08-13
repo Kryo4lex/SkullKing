@@ -1,9 +1,7 @@
 ﻿using SkullKingCore.Cards.Base;
-using SkullKingCore.Cards.Implementations;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
-using SkullKingCore.GameDefinitions.SubCardTypes;
 using SkullKingCore.Logging;
 
 namespace SkullKingConsole.Controller
