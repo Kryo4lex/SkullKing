@@ -41,8 +41,6 @@ namespace SkullKingConsole.Controller
 
             Logger.Instance.WriteToConsoleAndLog($"{Name} plays {card}");
 
-            hand.Remove(card);
-
             return Task.FromResult(card);
 
         }

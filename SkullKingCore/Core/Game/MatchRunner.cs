@@ -55,6 +55,9 @@ namespace SkullKingCore.Core.Game
 
         private async Task StartRoundAsync()
         {
+            // Reset sub-round counter at the start of each round
+            _state.CurrentSubRound = 1;
+
             // Announce the round to all controllers
             foreach (var controller in _controllers.Values)
             {
