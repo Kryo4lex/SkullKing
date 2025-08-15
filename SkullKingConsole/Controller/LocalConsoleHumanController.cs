@@ -6,6 +6,8 @@ using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 using SkullKingCore.Utility.UserInput;
+using System.Numerics;
+using System.Security.Cryptography;
 
 namespace SkullKingConsole.Controller
 {
@@ -22,10 +24,21 @@ namespace SkullKingConsole.Controller
             Name = name;
         }
 
+        public Task NotifyGameStartedAsync(GameState state)
+        {
+            Console.Clear();
+
+            Logger.Instance.WriteToConsoleAndLog($"--- Game started ---");
+
+            return Task.CompletedTask;
+        }
+
         public Task<Card> RequestCardPlayAsync(GameState state, List<Card> hand, TimeSpan maxWait)
         {
 
             int cardToPlayIndex = 0;
+
+            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Cards you can play:");
 
             Card.PrintListFancy(hand);
 
@@ -68,7 +81,7 @@ namespace SkullKingConsole.Controller
 
         public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> cardsThatPlayerIsAllowedToPlay, List<Card> cardsThatPlayerIsNotAllowedToPlay)
         {
-            Logger.Instance.WriteToConsoleAndLog($"Not all Cards in your hand can be played due to lead color/suit rule. Cards you are not allowed to play:");
+            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Not all Cards in your hand can be played due to lead color/suit rule. Cards you are not allowed to play:");
 
             Card.PrintListFancy(cardsThatPlayerIsNotAllowedToPlay);
 
@@ -91,7 +104,7 @@ namespace SkullKingConsole.Controller
 
             if (player != null)
             {
-                Logger.Instance.WriteToConsoleAndLog($"Your cards:");
+                Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Your cards:");
                 Card.PrintListFancy(player.Hand);
             }
             else
@@ -106,10 +119,26 @@ namespace SkullKingConsole.Controller
 
             }
 
-            Logger.Instance.WriteToConsoleAndLog($"{Name} bids {bid}");
+            Logger.Instance.WriteToConsoleAndLog($"");
 
             return Task.FromResult(bid);
 
+        }
+
+        public Task AnnounceBidAsync(GameState gameState, Player player, int bid, TimeSpan maxWait)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"{player.Name} bids {bid}");
+
+            return Task.CompletedTask;
+        }
+
+        public Task WaitForBidsReceivedAsync(GameState gameState)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Press Enter to confirm, that you have acknowledged the Bids.");
+
+            Console.ReadLine();
+
+            return Task.CompletedTask;
         }
 
         public Task NotifyCardPlayedAsync(Player player, Card playedCard)

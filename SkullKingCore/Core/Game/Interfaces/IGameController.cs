@@ -12,8 +12,12 @@ namespace SkullKingCore.Core.Game.Interfaces
 
         Task NotifyBidCollectionStartedAsync(GameState gameState);
 
+        Task WaitForBidsReceivedAsync(GameState gameState);
 
-        Task<int> RequestBidAsync(GameState gameState, int roundNumber, TimeSpan maxWait);
+
+        Task<int> RequestBidAsync(GameState gameState, int roundNumer, TimeSpan maxWait);
+
+        Task AnnounceBidAsync(GameState gameState, Player player, int bid, TimeSpan maxWait);
 
         Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> cardsThatPlayerIsAllowedToPlay, List<Card> cardsThatPlayerIsNotAllowedToPlay);
 
@@ -23,6 +27,8 @@ namespace SkullKingCore.Core.Game.Interfaces
         Task NotifyCardPlayedAsync(Player player, Card playedCard);
 
         Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round);
+
+        Task NotifyGameStartedAsync(GameState state);
 
         Task NotifyAboutSubRoundStartAsync(GameState state);
 

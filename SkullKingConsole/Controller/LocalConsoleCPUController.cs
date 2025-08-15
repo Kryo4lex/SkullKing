@@ -20,6 +20,12 @@ namespace SkullKingConsole.Controller
             Name = name;
         }
 
+        public Task NotifyGameStartedAsync(GameState state)
+        {
+
+            return Task.CompletedTask;
+        }
+
         public Task<Card> RequestCardPlayAsync(GameState state, List<Card> hand, TimeSpan maxWait)
         {
 
@@ -59,10 +65,21 @@ namespace SkullKingConsole.Controller
 
             int bid = _random.Next(0, roundNumber + 1);
 
-            Logger.Instance.WriteToConsoleAndLog($"{Name} bids {bid}");
-
             return Task.FromResult(bid);
 
+        }
+
+        public Task AnnounceBidAsync(GameState gameState, Player player, int bid, TimeSpan maxWait)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"{player.Name} bids {bid}");
+
+            return Task.CompletedTask;
+        }
+
+        public Task WaitForBidsReceivedAsync(GameState gameState)
+        {
+
+            return Task.CompletedTask;
         }
 
         public Task NotifyCardPlayedAsync(Player player, Card playedCard)

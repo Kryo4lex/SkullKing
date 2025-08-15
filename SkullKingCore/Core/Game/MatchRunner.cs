@@ -2,7 +2,6 @@
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Extensions;
 using SkullKingCore.GameDefinitions;
-using System.Collections.Generic;
 
 namespace SkullKingCore.Core.Game
 {
@@ -20,6 +19,12 @@ namespace SkullKingCore.Core.Game
 
         public async Task RunGameAsync()
         {
+
+            foreach (var controller in _controllers.Values)
+            {
+                await controller.NotifyGameStartedAsync(_state);
+            }
+
             //CurrentSubRound init = 1 required, CurrentRound can be different
 
             while (_state.CurrentRound <= _state.MaxRounds)
@@ -96,6 +101,20 @@ namespace SkullKingCore.Core.Game
 
                 int bid = await controller.RequestBidAsync(_state, _state.CurrentRound, Timeout.InfiniteTimeSpan);
                 player.Bids[new Player.Round(_state.CurrentRound)] = new Player.PredictedWins(bid); // store bid per round
+            }
+
+            for (int i = 0; i < playerCount; i++)
+            {
+                int playerIndex = (_state.StartingPlayerIndex + i) % playerCount;
+                var player = _state.Players[playerIndex];
+                var controller = _controllers[player.Id];
+
+                await controller.AnnounceBidAsync(_state, player, player.Bids[new Player.Round(_state.CurrentRound)].Value, Timeout.InfiniteTimeSpan);
+            }
+
+            foreach (var controller in _controllers.Values)
+            {
+                await controller.WaitForBidsReceivedAsync(_state);
             }
         }
 

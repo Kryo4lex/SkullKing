@@ -295,7 +295,6 @@ namespace SkullKingCore.Core
             return specialsAlwaysAllowed.Concat(legalNumbers).ToList();
         }
 
-
         /// <summary>
         /// Mermaid wins combo: Pirate + Skull King + Mermaid present.
         /// </summary>
