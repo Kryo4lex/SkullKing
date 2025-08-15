@@ -1,8 +1,8 @@
-﻿using SkullKingCore.Cards.Base;
+﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.GameDefinitions.SubCardTypes;
 
-namespace SkullKingCore.Cards.Implementations
+namespace SkullKingCore.Core.Cards.Implementations
 {
     public class PirateCard : Card
     {

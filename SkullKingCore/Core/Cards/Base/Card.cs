@@ -1,8 +1,8 @@
-﻿using SkullKingCore.Cards.Interfaces;
+﻿using SkullKingCore.Core.Cards.Interfaces;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 
-namespace SkullKingCore.Cards.Base
+namespace SkullKingCore.Core.Cards.Base
 {
     public abstract class Card : ICard
     {

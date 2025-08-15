@@ -1,10 +1,10 @@
-﻿using SkullKingCore.Cards.Base;
+﻿using SkullKingCore.Core.Cards.Base;
 
-namespace SkullKingCore.Cards.Implementations
+namespace SkullKingCore.Core.Cards.Implementations
 {
-    public class EscapeCard : Card
+    public class KrakenCard : Card
     {
-        public EscapeCard() : base(GameDefinitions.CardType.ESCAPE)
+        public KrakenCard() : base(GameDefinitions.CardType.KRAKEN)
         {
 
         }

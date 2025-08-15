@@ -1,9 +1,8 @@
-﻿using SkullKingCore.Cards.Base;
-using SkullKingCore.Cards.Implementations;
+﻿using SkullKingCore.Core.Cards.Base;
+using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.GameDefinitions.SubCardTypes;
 using SkullKingCore.Logging;
-using System.Collections.Generic;
 
 namespace SkullKingCore.Test
 {

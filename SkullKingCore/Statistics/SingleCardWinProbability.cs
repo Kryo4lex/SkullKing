@@ -1,5 +1,5 @@
-﻿using SkullKingCore.Cards.Base;
-using SkullKingCore.Core;
+﻿using SkullKingCore.Core;
+using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Extensions;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;

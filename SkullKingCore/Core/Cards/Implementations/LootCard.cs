@@ -1,10 +1,10 @@
-﻿using SkullKingCore.Cards.Base;
+﻿using SkullKingCore.Core.Cards.Base;
 
-namespace SkullKingCore.Cards.Implementations
+namespace SkullKingCore.Core.Cards.Implementations
 {
-    public class WhiteWhaleCard : Card
+    public class LootCard : Card
     {
-        public WhiteWhaleCard() : base(GameDefinitions.CardType.WHITE_WHALE)
+        public LootCard() : base(GameDefinitions.CardType.LOOT)
         {
 
         }

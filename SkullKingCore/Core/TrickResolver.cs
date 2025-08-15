@@ -1,10 +1,9 @@
-﻿using SkullKingCore.Cards.Base;
-using SkullKingCore.Cards.Implementations;
-using SkullKingCore.Cards.Interfaces;
+﻿using SkullKingCore.Core.Cards.Base;
+using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.GameDefinitions;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
+using System;
+using static SkullKingCore.Core.Game.Player;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SkullKingCore.Core
 {
@@ -106,8 +105,9 @@ namespace SkullKingCore.Core
         }
 
         /// <summary>
-        /// Returns the index (in original play order) of the card that
-        /// <b>would have won the trick if no KRAKEN or WHITE WHALE discard effect had occurred</b>.
+        /// Returns the index (in original play order) of the player who leads next when a trick is cancelled.
+        /// Kraken: compute who would have won if Krakens were ignored.
+        /// White Whale(only specials): the White Whale player leads next.
         ///
         /// Used to determine who leads the next trick after a trick-cancelling situation:
         ///

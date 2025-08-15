@@ -1,4 +1,4 @@
-﻿using SkullKingCore.Cards.Base;
+﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Extensions;
 using SkullKingCore.GameDefinitions;

@@ -1,5 +1,5 @@
-﻿using SkullKingCore.Cards.Base;
-using SkullKingCore.Cards.Factory;
+﻿using SkullKingCore.Core.Cards.Base;
+using SkullKingCore.Core.Cards.Factory;
 
 namespace SkullKingCore.GameDefinitions
 {

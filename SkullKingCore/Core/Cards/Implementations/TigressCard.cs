@@ -1,7 +1,7 @@
-﻿using SkullKingCore.Cards.Base;
+﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.GameDefinitions;
 
-namespace SkullKingCore.Cards.Implementations
+namespace SkullKingCore.Core.Cards.Implementations
 {
     public class TigressCard : Card
     {
