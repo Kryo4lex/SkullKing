@@ -25,6 +25,11 @@ namespace SkullKingConsole
         {
 
             Logger.Instance.Initialize($"{nameof(SkullKingConsole)}_log.txt");
+            /*
+            CommandTrickTests.Run();
+
+            return;
+            */
 
             while (true)
             {

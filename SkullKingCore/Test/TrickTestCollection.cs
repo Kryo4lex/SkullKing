@@ -342,8 +342,8 @@ namespace SkullKingCore.Test
 
                 new TrickTest("27", new List<Card>
                 {
-                    new SkullKingCard(),// Winner
-                    new MermaidCard(MermaidType.ALYRA),
+                    new SkullKingCard(),
+                    new MermaidCard(MermaidType.ALYRA),// Winner
                 }, 1),
 
                 new TrickTest("28", new List<Card>
@@ -369,6 +369,7 @@ namespace SkullKingCore.Test
                     new NumberCard(CardType.LILA,   6),//Winner lead color and highest number
                     new NumberCard(CardType.GREEN, 14),
                 }, 2),
+
             };
         }
 

@@ -1,5 +1,6 @@
 ﻿using SkullKingCore.Cards.Base;
 using SkullKingCore.Cards.Implementations;
+using SkullKingCore.Cards.Interfaces;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
@@ -53,6 +54,13 @@ namespace SkullKingConsole.Controller
 
             return Task.FromResult(card);
 
+        }
+
+        public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"Not all Cards in your hand can be played due to lead color/suit rule.");
+
+            return Task.CompletedTask;
         }
 
         public Task ShowMessageAsync(string message)

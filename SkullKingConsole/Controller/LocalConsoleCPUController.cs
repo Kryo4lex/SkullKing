@@ -137,5 +137,9 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
+        public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

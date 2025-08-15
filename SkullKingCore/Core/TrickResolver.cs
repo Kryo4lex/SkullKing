@@ -1,6 +1,9 @@
 ﻿using SkullKingCore.Cards.Base;
 using SkullKingCore.Cards.Implementations;
+using SkullKingCore.Cards.Interfaces;
 using SkullKingCore.GameDefinitions;
+using System.ComponentModel;
+using System.Diagnostics.Metrics;
 
 namespace SkullKingCore.Core
 {
@@ -87,7 +90,7 @@ namespace SkullKingCore.Core
                 return 0; // First Escape wins if everyone escaped
 
             // --- Step 4: Standard number card resolution ---
-            return ResolveNumberTrick(typedCards, leadType, leadIsBlack);
+            return ResolveNumberTrick(typedCards, leadType);
         }
 
         /// <summary>
@@ -102,41 +105,69 @@ namespace SkullKingCore.Core
         }
 
         /// <summary>
-        /// Returns the index of the winning card in the played list, without considering special cards, that destroy the Trick, like the Kraken.
-        /// Used to determine, which card would have won the trick under normal circumstances.
+        /// Returns the index (in original play order) of the card that
+        /// <b>would have won the trick if no KRAKEN or WHITE WHALE discard effect had occurred</b>.
+        ///
+        /// Used to determine who leads the next trick after a trick-cancelling situation:
+        ///
+        /// Kraken — “The next trick is led by the player who would have won the trick.”
+        /// — We remove all KRAKEN cards from consideration and resolve the remainder as if they had never been played.
+        ///
+        /// White Whale — “If only special cards were played, then the trick is discarded (like the Kraken)
+        /// and the person who played the White Whale is the next to lead.”
+        /// — After removing Krakens, if no number cards remain, this method returns the index of the White Whale card.
+        /// 
+        /// Assumes input always contains at least one card, and that if a trick contains a White Whale-only-specials case,
+        /// exactly one White Whale will be present.
         /// </summary>
         /// <param name="cardsPlayed">Cards in the order they were played.</param>
-        /// <returns>The winning card, even though if special cards, like the Kraken were played, which destroy the Trick.</returns>
+        /// <returns>
+        /// The index in <paramref name="cardsPlayed"/> of the card whose player
+        /// would lead next under the above rules.
+        /// </returns>
+        /// <exception cref="ArgumentException">If cardsPlayed is null or empty.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// If no White Whale is present in an only-special-cards scenario, or if winner resolution fails.
+        /// </exception>
         public static int DetermineTrickWinnerIndexNoSpecialCards(List<Card> cardsPlayed)
         {
-            List<CardType> specialCardsTypes = new List<CardType>
-            {
-                //CardType.WHITE_WHALE,//White Whale does not destroy Trick
-                CardType.KRAKEN,//Only Kraken destroys the Trick and 
-            };
+            if (cardsPlayed == null || cardsPlayed.Count == 0)
+                throw new ArgumentException("cardsPlayed must contain at least one card.", nameof(cardsPlayed));
 
-            // Pair each card with its original index, then filter out special cards
-            var indexedCards = cardsPlayed
+            // 1) Remove all Krakens — they destroy the trick, but here we want “what would have happened without them”
+            var indexed = cardsPlayed
                 .Select((card, index) => new { Card = card, OriginalIndex = index })
-                .Where(x => !specialCardsTypes.Contains(x.Card.CardType))
                 .ToList();
 
-            //ToDo: check rule validity
-            // If no valid cards remain, return the last played card's original index
-            if (!indexedCards.Any())
-                return cardsPlayed.Count - 1;
+            var filteredNoKraken = indexed
+                .Where(x => x.Card.CardType != CardType.KRAKEN)
+                .ToList();
 
-            // Determine winner in filtered list
+            if (filteredNoKraken.Count == 0)
+                throw new InvalidOperationException("No cards remain after removing Krakens — cannot determine leader.");
+
+            // 2) If remaining trick has no number cards -> White Whale “all specials” rule applies
+            bool anyNumber =
+                filteredNoKraken.Any(x => Card.IsNumberCard(x.Card.CardType));
+
+            if (!anyNumber)
+            {
+                var whale = filteredNoKraken
+                    .FirstOrDefault(x => x.Card.CardType == CardType.WHITE_WHALE)
+                    ?? throw new InvalidOperationException("Only special cards remain but no White Whale was played.");
+
+                return whale.OriginalIndex;
+            }
+
+            // 3) Otherwise, resolve the trick normally without the Kraken(s)
             int? filteredWinnerIndex = DetermineTrickWinnerIndex(
-                indexedCards.Select(x => x.Card).ToList()
-            );
+                filteredNoKraken.Select(x => x.Card).ToList()
+            ) ?? throw new InvalidOperationException("Unable to determine a winner after removing Krakens.");
 
-            if (filteredWinnerIndex == null)
-                throw new Exception("There must be a winner!");
-
-            // Map back to original index
-            return indexedCards[filteredWinnerIndex.Value].OriginalIndex;
+            // Map back to original play order
+            return filteredNoKraken[filteredWinnerIndex.Value].OriginalIndex;
         }
+
 
         /// <summary>
         /// Resolves trick when White Whale is played:
@@ -159,7 +190,7 @@ namespace SkullKingCore.Core
         /// - Otherwise, follow lead suit if possible.
         /// - Highest number wins, earliest played wins ties.
         /// </summary>
-        private static int? ResolveNumberTrick(List<CardInfo> cards, CardType leadType, bool leadIsBlack)
+        private static int? ResolveNumberTrick(List<CardInfo> cards, CardType leadType)
         {
             var numberCards = cards.Where(x => Card.IsNumberCard(x.Type)).ToList();
             if (!numberCards.Any()) return null;
@@ -182,6 +213,74 @@ namespace SkullKingCore.Core
                 .OrderByDescending(x => x.Card.GenericValue ?? 0)
                 .ThenBy(x => x.Index)
                 .First().Index;
+        }
+
+        /// <summary>
+        /// Computes the subset of <paramref name="playerHand"/> that is legal to play
+        /// given the current trick, enforcing the follow-suit rule for number cards
+        /// while allowing special (non-number) cards at all times.
+        /// 
+        /// Rules encoded:
+        /// - Lead color = suit of the first number card in <paramref name="currentTrick"/> (BLACK counts as a suit).
+        /// - Non-number cards (e.g., Escapes, Pirates, Skull King, Mermaids, Tigress-as-escape/pirate, Kraken, White Whale) 
+        ///   are always legal, regardless of lead color.
+        /// - If a lead color exists and the player holds number cards of that color, they must choose
+        ///   from those number cards (but may still play any non-number card).
+        /// - If the player has no number cards of the lead color, any number card is legal (plus all non-number cards).
+        /// - If no number card has been played yet, all cards are legal.
+        /// 
+        /// Notes:
+        /// - The returned list is a filtered view (new list of references) — it does not clone cards.
+        /// - The Tigress card is never a number card and is always legal to play, regardless of lead suit.
+        /// - Edge cases: empty hand -> empty result; one-card hand -> that single card if present.
+        /// </summary>
+        /// <param name="currentTrick">Cards already played in the current trick, in play order.</param>
+        /// <param name="playerHand">Cards in the player's hand.</param>
+        /// <returns>A list of cards from <paramref name="playerHand"/> that are legal to play.</returns>
+        public static List<Card> GetAllowedCardsToPlay(List<Card> currentTrick, List<Card> playerHand)
+        {
+            if (playerHand == null || playerHand.Count == 0)
+                return new List<Card>();
+
+            // If the player only has one card, they must play it — return as-is.
+            if (playerHand.Count == 1)
+                return playerHand;
+
+            // 1) Determine lead color: the suit of the first number card in the trick (if any).
+            //    Use GetEffectiveType so special cases like Tigress-as-escape or pirate are
+            //    interpreted correctly (and never treated as number cards).
+            Card? leadNumberCard = currentTrick?.FirstOrDefault(c => Card.IsNumberCard(GetEffectiveType(c)));
+
+            if (leadNumberCard == null)
+            {
+                // No number card has been played yet → any card (including all specials) is allowed.
+                return new List<Card>(playerHand);
+            }
+
+            CardType leadSuit = GetEffectiveType(leadNumberCard);
+
+            // 2) Split player's hand into:
+            //    - specialsAlwaysAllowed: any non-number card (Escapes, Pirates, Skull King, Mermaid,
+            //      Tigress-as-escape/pirate, White Whale, Kraken, etc.)
+            //    - numberCards: number cards of any suit
+            var specialsAlwaysAllowed = playerHand
+                .Where(c => !Card.IsNumberCard(GetEffectiveType(c)));
+
+            var numberCards = playerHand
+                .Where(c => Card.IsNumberCard(GetEffectiveType(c)));
+
+            // 3) Among number cards, see if player can follow lead suit.
+            var numberCardsOfLeadSuit = numberCards
+                .Where(c => GetEffectiveType(c) == leadSuit);
+
+            // 4) If the player can follow suit, restrict number-card options to that suit.
+            //    Specials remain always playable (e.g., Tigress can still be played regardless).
+            var legalNumbers = numberCardsOfLeadSuit.Any()
+                ? numberCardsOfLeadSuit
+                : numberCards;
+
+            // 5) Combine always-legal specials with legal number cards and return.
+            return specialsAlwaysAllowed.Concat(legalNumbers).ToList();
         }
 
         /// <summary>

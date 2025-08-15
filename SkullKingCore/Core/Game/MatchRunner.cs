@@ -109,7 +109,14 @@ namespace SkullKingCore.Core.Game
                 var player = _state.Players[playerIndex];
                 var controller = _controllers[player.Id];
 
-                Card card = await controller.RequestCardPlayAsync(_state, player.Hand, Timeout.InfiniteTimeSpan);
+                List<Card> cardsThatPlayerIsAllowedToPlay = TrickResolver.GetAllowedCardsToPlay(cardsInPlay, player.Hand);
+
+                if(player.Hand.Count != cardsThatPlayerIsAllowedToPlay.Count)
+                {
+                    await controller.NotifyNotAllCardsInHandCanBePlayed(_state);
+                }
+
+                Card card = await controller.RequestCardPlayAsync(_state, cardsThatPlayerIsAllowedToPlay, Timeout.InfiniteTimeSpan);
 
                 await controller.NotifyCardPlayedAsync(player, card);
 
@@ -128,6 +135,10 @@ namespace SkullKingCore.Core.Game
                 newStartingPlayerIndex = (_state.StartingPlayerIndex + winnerIndex.Value) % playerCount;
                 winner = _state.Players[newStartingPlayerIndex];
                 winningCard = cardsInPlay[winnerIndex.Value];
+            }
+            else//special case if null, which could happen with KRAKEN or WHITE_WHALE
+            {
+                winnerIndex = TrickResolver.DetermineTrickWinnerIndexNoSpecialCards(cardsInPlay);
             }
 
             // Set the next starting player only if we have a winner
