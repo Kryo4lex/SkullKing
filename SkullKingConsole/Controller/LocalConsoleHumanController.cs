@@ -40,13 +40,23 @@ namespace SkullKingConsole.Controller
             if (card.CardType == CardType.TIGRESS)
             {
 
-                List<CardType> availableOptions = new List<CardType>()
+                string? choice;
+                do
                 {
-                    CardType.ESCAPE,
-                    CardType.PIRATE,
-                };
+                    Logger.Instance.WriteToConsoleAndLog("Enter E (Escape) or P (Pirate): ");
+                    choice = Console.ReadLine()?.Trim().ToUpperInvariant();
+                }
+                while (choice != "E" && choice != "P");
 
-                ((TigressCard)card).PlayedAsType = availableOptions[_random.Next(availableOptions.Count)];
+                switch(choice)
+                {
+                    case "E":
+                        ((TigressCard)card).PlayedAsType = CardType.ESCAPE;
+                        break;
+                    case "P":
+                    ((TigressCard)card).PlayedAsType = CardType.PIRATE;
+                        break;
+                }
 
             }
 
@@ -56,9 +66,11 @@ namespace SkullKingConsole.Controller
 
         }
 
-        public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState)
+        public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> cardsThatPlayerIsAllowedToPlay, List<Card> cardsThatPlayerIsNotAllowedToPlay)
         {
-            Logger.Instance.WriteToConsoleAndLog($"Not all Cards in your hand can be played due to lead color/suit rule.");
+            Logger.Instance.WriteToConsoleAndLog($"Not all Cards in your hand can be played due to lead color/suit rule. Cards you are not allowed to play:");
+
+            Card.PrintListFancy(cardsThatPlayerIsNotAllowedToPlay);
 
             return Task.CompletedTask;
         }

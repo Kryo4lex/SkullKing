@@ -2,6 +2,7 @@
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Extensions;
 using SkullKingCore.GameDefinitions;
+using System.Collections.Generic;
 
 namespace SkullKingCore.Core.Game
 {
@@ -111,9 +112,13 @@ namespace SkullKingCore.Core.Game
 
                 List<Card> cardsThatPlayerIsAllowedToPlay = TrickResolver.GetAllowedCardsToPlay(cardsInPlay, player.Hand);
 
-                if(player.Hand.Count != cardsThatPlayerIsAllowedToPlay.Count)
+                List<Card> cardsThatPlayerIsNotAllowedToPlay = player.Hand!
+                    .Except(cardsThatPlayerIsAllowedToPlay)
+                    .ToList();
+
+                if (player.Hand.Count != cardsThatPlayerIsAllowedToPlay.Count)
                 {
-                    await controller.NotifyNotAllCardsInHandCanBePlayed(_state);
+                    await controller.NotifyNotAllCardsInHandCanBePlayed(_state, cardsThatPlayerIsAllowedToPlay, cardsThatPlayerIsNotAllowedToPlay);
                 }
 
                 Card card = await controller.RequestCardPlayAsync(_state, cardsThatPlayerIsAllowedToPlay, Timeout.InfiniteTimeSpan);

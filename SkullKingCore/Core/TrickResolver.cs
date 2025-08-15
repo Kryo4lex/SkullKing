@@ -217,26 +217,33 @@ namespace SkullKingCore.Core
 
         /// <summary>
         /// Computes the subset of <paramref name="playerHand"/> that is legal to play
-        /// given the current trick, enforcing the follow-suit rule for number cards
-        /// while allowing special (non-number) cards at all times.
+        /// given the current trick, enforcing follow-suit for number cards ONLY when the
+        /// trick so far contains numbers and no special cards other than Escapes.
         /// 
-        /// Rules encoded:
-        /// - Lead color = suit of the first number card in <paramref name="currentTrick"/> (BLACK counts as a suit).
-        /// - Non-number cards (e.g., Escapes, Pirates, Skull King, Mermaids, Tigress-as-escape/pirate, Kraken, White Whale) 
-        ///   are always legal, regardless of lead color.
-        /// - If a lead color exists and the player holds number cards of that color, they must choose
-        ///   from those number cards (but may still play any non-number card).
-        /// - If the player has no number cards of the lead color, any number card is legal (plus all non-number cards).
+        /// Official-rule alignment:
+        /// - Lead color = suit of the first number card played (BLACK counts as a suit).
+        /// - Non-number cards (e.g., Escape, Pirate, Skull King, Mermaid, Tigress-as-escape/pirate,
+        ///   White Whale, Kraken) are always legal to play, regardless of lead color.
+        /// - Follow-suit for number cards is required only when:
+        ///     * at least one number card has been played in the trick, AND
+        ///     * no non-Escape special has been played (meaning no Pirate, Mermaid, Skull King,
+        ///       Tigress-as-Pirate, White Whale, or Kraken has appeared yet).
+        ///   Examples:
+        ///     - First card is Escape, later a Yellow number appears, and no Pirate/Mermaid/SK/Whale/Kraken
+        ///       has been played → number cards must follow Yellow; specials still always legal.
+        ///     - If any non-Escape special (Pirate, Mermaid, Skull King, White Whale, Kraken, etc.)
+        ///       has been played at any point in the trick → no follow-suit requirement for number cards
+        ///       for the remainder of that trick.
         /// - If no number card has been played yet, all cards are legal.
         /// 
         /// Notes:
+        /// - Tigress is never a number card; as Escape or Pirate, it is always legal to play.
+        /// - White Whale and Kraken both cancel suit-following immediately once played.  
+        ///   * White Whale changes resolution rules and removes color relevance.  
+        ///   * Kraken destroys the trick instantly, so there is never a suit to follow.
         /// - The returned list is a filtered view (new list of references) — it does not clone cards.
-        /// - The Tigress card is never a number card and is always legal to play, regardless of lead suit.
-        /// - Edge cases: empty hand -> empty result; one-card hand -> that single card if present.
+        /// - Edge cases: empty hand -> empty result; one-card hand -> that single card is returned as-is.
         /// </summary>
-        /// <param name="currentTrick">Cards already played in the current trick, in play order.</param>
-        /// <param name="playerHand">Cards in the player's hand.</param>
-        /// <returns>A list of cards from <paramref name="playerHand"/> that are legal to play.</returns>
         public static List<Card> GetAllowedCardsToPlay(List<Card> currentTrick, List<Card> playerHand)
         {
             if (playerHand == null || playerHand.Count == 0)
@@ -246,42 +253,50 @@ namespace SkullKingCore.Core
             if (playerHand.Count == 1)
                 return playerHand;
 
-            // 1) Determine lead color: the suit of the first number card in the trick (if any).
-            //    Use GetEffectiveType so special cases like Tigress-as-escape or pirate are
-            //    interpreted correctly (and never treated as number cards).
-            Card? leadNumberCard = currentTrick?.FirstOrDefault(c => Card.IsNumberCard(GetEffectiveType(c)));
-
-            if (leadNumberCard == null)
+            // Helper local funcs using effective types (so Tigress etc. are interpreted correctly).
+            bool IsNumber(Card c) => Card.IsNumberCard(GetEffectiveType(c));
+            bool IsNonEscapeSpecial(Card c)
             {
-                // No number card has been played yet → any card (including all specials) is allowed.
-                return new List<Card>(playerHand);
+                var t = GetEffectiveType(c);
+                return !Card.IsNumberCard(t) && t != CardType.ESCAPE;
             }
 
-            CardType leadSuit = GetEffectiveType(leadNumberCard);
+            // Determine if any number has been played in the trick so far.
+            bool anyNumberPlayed = currentTrick != null && currentTrick.Any(IsNumber);
 
-            // 2) Split player's hand into:
-            //    - specialsAlwaysAllowed: any non-number card (Escapes, Pirates, Skull King, Mermaid,
-            //      Tigress-as-escape/pirate, White Whale, Kraken, etc.)
-            //    - numberCards: number cards of any suit
-            var specialsAlwaysAllowed = playerHand
-                .Where(c => !Card.IsNumberCard(GetEffectiveType(c)));
+            // If no number yet → anything goes (including all specials).
+            if (!anyNumberPlayed)
+                return new List<Card>(playerHand);
 
-            var numberCards = playerHand
-                .Where(c => Card.IsNumberCard(GetEffectiveType(c)));
+            // If any non-Escape special has been played (e.g., Pirate, Mermaid, Skull King, White Whale, Kraken),
+            // then follow-suit for number cards is NOT enforced for the rest of this trick.
+            bool anyNonEscapeSpecialPlayed = currentTrick!.Any(IsNonEscapeSpecial);
+            if (anyNonEscapeSpecialPlayed)
+                return new List<Card>(playerHand);
 
-            // 3) Among number cards, see if player can follow lead suit.
-            var numberCardsOfLeadSuit = numberCards
-                .Where(c => GetEffectiveType(c) == leadSuit);
+            // At this point: numbers have been played AND the only specials seen so far are Escapes.
+            // → Enforce follow-suit for number cards.
+            // Lead suit is the suit of the first number card played.
+            var leadNumberCard = currentTrick!.First(c => IsNumber(c));
+            var leadSuit = GetEffectiveType(leadNumberCard);
 
-            // 4) If the player can follow suit, restrict number-card options to that suit.
-            //    Specials remain always playable (e.g., Tigress can still be played regardless).
+            // Specials (non-number) are ALWAYS legal (e.g., Escape, Tigress-as-escape/pirate, etc.).
+            var specialsAlwaysAllowed = playerHand.Where(c => !IsNumber(c));
+
+            // Number cards in hand.
+            var numberCards = playerHand.Where(IsNumber);
+
+            // Among number cards, must follow lead suit if possible.
+            var numberCardsOfLeadSuit = numberCards.Where(c => GetEffectiveType(c) == leadSuit);
+
             var legalNumbers = numberCardsOfLeadSuit.Any()
                 ? numberCardsOfLeadSuit
                 : numberCards;
 
-            // 5) Combine always-legal specials with legal number cards and return.
+            // Combine: specials (always) + legal number options.
             return specialsAlwaysAllowed.Concat(legalNumbers).ToList();
         }
+
 
         /// <summary>
         /// Mermaid wins combo: Pirate + Skull King + Mermaid present.

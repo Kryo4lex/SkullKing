@@ -15,6 +15,8 @@ namespace SkullKingCore.Cards.Base
             CardType.BLACK,
         };
 
+        //public Guid CardGuid { get; set; } = Guid.NewGuid();
+
         //protected set, so that child classes can set
         //changed to regular set, so that it can be modified, e.g. for the Tigress
         public CardType CardType { get; set; }

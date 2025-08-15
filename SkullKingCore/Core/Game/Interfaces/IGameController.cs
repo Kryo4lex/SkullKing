@@ -15,7 +15,7 @@ namespace SkullKingCore.Core.Game.Interfaces
 
         Task<int> RequestBidAsync(GameState gameState, int roundNumber, TimeSpan maxWait);
 
-        Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState);
+        Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> cardsThatPlayerIsAllowedToPlay, List<Card> cardsThatPlayerIsNotAllowedToPlay);
 
         Task<Card> RequestCardPlayAsync(GameState state, List<Card> hand, TimeSpan maxWait);
 
