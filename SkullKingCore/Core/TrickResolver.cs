@@ -3,6 +3,7 @@ using SkullKingCore.Cards.Implementations;
 using SkullKingCore.Cards.Interfaces;
 using SkullKingCore.GameDefinitions;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
 namespace SkullKingCore.Core
@@ -111,63 +112,60 @@ namespace SkullKingCore.Core
         /// Used to determine who leads the next trick after a trick-cancelling situation:
         ///
         /// Kraken — “The next trick is led by the player who would have won the trick.”
-        /// — We remove all KRAKEN cards from consideration and resolve the remainder as if they had never been played.
+        /// — Remove all KRAKEN cards and resolve the remainder as if they were never played.
         ///
         /// White Whale — “If only special cards were played, then the trick is discarded (like the Kraken)
         /// and the person who played the White Whale is the next to lead.”
-        /// — After removing Krakens, if no number cards remain, this method returns the index of the White Whale card.
+        /// — After removing Krakens, if the remaining trick contains only special cards and includes a White Whale,
+        /// return the (first) White Whale player’s index.
         /// 
-        /// Assumes input always contains at least one card, and that if a trick contains a White Whale-only-specials case,
-        /// exactly one White Whale will be present.
+        /// If, after removing Krakens, the remaining trick contains only specials but no White Whale,
+        /// resolve that trick normally (e.g., Skull King beats pirates and escapes; all Escapes → first Escape).
         /// </summary>
         /// <param name="cardsPlayed">Cards in the order they were played.</param>
-        /// <returns>
-        /// The index in <paramref name="cardsPlayed"/> of the card whose player
-        /// would lead next under the above rules.
-        /// </returns>
+        /// <returns>The index in <paramref name="cardsPlayed"/> of the player who would lead next under these rules.</returns>
         /// <exception cref="ArgumentException">If cardsPlayed is null or empty.</exception>
-        /// <exception cref="InvalidOperationException">
-        /// If no White Whale is present in an only-special-cards scenario, or if winner resolution fails.
-        /// </exception>
+        /// <exception cref="InvalidOperationException">If only Krakens were played, or if resolution unexpectedly fails.</exception>
         public static int DetermineTrickWinnerIndexNoSpecialCards(List<Card> cardsPlayed)
         {
             if (cardsPlayed == null || cardsPlayed.Count == 0)
                 throw new ArgumentException("cardsPlayed must contain at least one card.", nameof(cardsPlayed));
 
-            // 1) Remove all Krakens — they destroy the trick, but here we want “what would have happened without them”
+            // Remove all Krakens; we want “what would have happened without them”.
             var indexed = cardsPlayed
                 .Select((card, index) => new { Card = card, OriginalIndex = index })
                 .ToList();
 
-            var filteredNoKraken = indexed
-                .Where(x => x.Card.CardType != CardType.KRAKEN)
-                .ToList();
+            var noKraken = indexed.Where(x => x.Card.CardType != CardType.KRAKEN).ToList();
+            if (noKraken.Count == 0)
+                throw new InvalidOperationException("Only Kraken(s) were played; cannot determine a would-have-winner.");
 
-            if (filteredNoKraken.Count == 0)
-                throw new InvalidOperationException("No cards remain after removing Krakens — cannot determine leader.");
-
-            // 2) If remaining trick has no number cards -> White Whale “all specials” rule applies
-            bool anyNumber =
-                filteredNoKraken.Any(x => Card.IsNumberCard(x.Card.CardType));
-
+            bool anyNumber = noKraken.Any(x => Card.IsNumberCard(x.Card.CardType));
             if (!anyNumber)
             {
-                var whale = filteredNoKraken
-                    .FirstOrDefault(x => x.Card.CardType == CardType.WHITE_WHALE)
-                    ?? throw new InvalidOperationException("Only special cards remain but no White Whale was played.");
+                // Only specials remain after removing Krakens.
+                var whale = noKraken.FirstOrDefault(x => x.Card.CardType == CardType.WHITE_WHALE);
+                if (whale != null)
+                {
+                    // Whale + only specials ⇒ Whale player leads next.
+                    return whale.OriginalIndex;
+                }
 
-                return whale.OriginalIndex;
+                // No Whale: resolve the special-only trick normally.
+                int? idxSpecials = DetermineTrickWinnerIndex(noKraken.Select(x => x.Card).ToList());
+                if (idxSpecials == null)
+                    throw new InvalidOperationException("Unable to resolve winner with only special cards after removing Krakens.");
+
+                return noKraken[idxSpecials.Value].OriginalIndex;
             }
 
-            // 3) Otherwise, resolve the trick normally without the Kraken(s)
-            int? filteredWinnerIndex = DetermineTrickWinnerIndex(
-                filteredNoKraken.Select(x => x.Card).ToList()
-            ) ?? throw new InvalidOperationException("Unable to determine a winner after removing Krakens.");
+            // Numbers present: resolve normally without the Kraken(s).
+            int? idx = DetermineTrickWinnerIndex(noKraken.Select(x => x.Card).ToList());
+            if (idx == null)
+                throw new InvalidOperationException("Unable to determine a winner after removing Krakens.");
 
-            // Map back to original play order
-            return filteredNoKraken[filteredWinnerIndex.Value].OriginalIndex;
+            return noKraken[idx.Value].OriginalIndex;
         }
-
 
         /// <summary>
         /// Resolves trick when White Whale is played:

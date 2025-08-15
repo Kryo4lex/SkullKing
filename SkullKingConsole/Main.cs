@@ -25,6 +25,9 @@ namespace SkullKingConsole
         {
 
             Logger.Instance.Initialize($"{nameof(SkullKingConsole)}_log.txt");
+
+            //CommandCardHandWinProbability.Run();
+
             /*
             CommandTrickTests.Run();
 

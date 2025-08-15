@@ -1,6 +1,7 @@
 ﻿//#define COMPILE_OLDER_METHODS
 
 using SkullKingCore.Cards.Base;
+using SkullKingCore.Cards.Implementations;
 using SkullKingCore.Core;
 using SkullKingCore.Extensions;
 using SkullKingCore.GameDefinitions;
@@ -50,142 +51,158 @@ namespace SkullKingCore.Statistics
         }
 
         /// <summary>
-        /// Monte Carlo simulation to estimate the number of tricks you will win,
-        /// assuming opponents play randomly ("dumb" play, no strategy).
+        /// Runs a Monte Carlo simulation to estimate how many tricks you will win
+        /// when all other players choose randomly among their legal plays.
         /// 
-        /// Key improvements over original version:
-        /// 1. <b>Randomized starting lead</b> each simulation (removes bias from always starting first).
-        /// 2. <b>Random card selection each trick</b> from your hand (removes fixed play order bias).
-        /// 3. <b>Full hand dealing</b> to opponents before play (models real game state instead of drawing mid-play).
-        /// 4. Tracks <b>full distribution of tricks won</b>, not just average.
-        /// 5. Optimized to reduce LINQ/allocations in the inner loop for better performance at high simulation counts.
+        /// The simulation mirrors real trick flow:
+        /// - A random player leads first.
+        /// - Players act in turn order, each choosing uniformly at random from the cards they are legally
+        ///   allowed to play given the current trick and follow-suit rules (special cards are always legal).
+        /// - A trick’s winner is determined by normal ranking and special-card interactions.
+        /// - If a trick is destroyed by special cards, the next leader is chosen according to the rulebook’s
+        ///   “would-have-won” instruction.
+        /// - The winner of each trick leads the next one.
+        /// 
+        /// Dealing matches a real round:
+        /// - Every player (including you) holds exactly the round size of cards (the round size equals your hand size).
+        /// - Any leftover cards from the full deck are not in play this round.
+        /// 
+        /// Opponents are modeled as “random, legal” (no strategy).
         /// </summary>
-        /// <param name="maxDegreeOfParallelism">Maximum parallel threads to use for simulations.</param>
+        /// <param name="maxDegreeOfParallelism">Maximum number of parallel threads to run simulations.</param>
         public void Calculate(int maxDegreeOfParallelism = 8)
         {
-            // Total wins across all simulations
             int winsTotal = 0;
-
-            // Tracks how many times you win exactly k tricks (k -> frequency)
-            //ConcurrentDictionary<int, int> winsDistribution = new ConcurrentDictionary<int, int>();
             WinsDistribution = new ConcurrentDictionary<int, int>();
 
-            // Parallel execution settings
-            var options = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = maxDegreeOfParallelism
-            };
+            var options = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
 
-            // Run simulations in parallel
             Parallel.For(0, NSimulations, options, simulationCounter =>
             {
-                // Thread-local random generator
+                // Simple per-iteration RNG; seed collisions are acceptable for this baseline.
                 var random = new Random(Guid.NewGuid().GetHashCode());
 
-                // Copy your hand for this simulation (CardsToTest = your known hand)
-                List<Card> playerHand = new List<Card>(CardHandToTest);
+                // Your fixed hand for this simulation; round size is defined by your hand size
+                var playerHand = new List<Card>(CardHandToTest);
+                int roundSize = playerHand.Count;
 
-                // Create and shuffle full deck
-                List<Card> deck = Deck.CreateDeck();
+                // Create a full deck, shuffle it, then remove your cards to form the opponents' pool
+                var deck = Deck.CreateDeck();
                 deck.Shuffle(random);
 
-                // Remove your cards from the deck to get opponent's card pool
-                List<Card> deckWithoutOwnCards = new List<Card>(deck);
-                RemoveMatchesOneByOne(deckWithoutOwnCards, CardHandToTest);
+                // Remaining deck after removing your exact cards
+                var cardPool = new List<Card>(deck);
+                RemoveMatchesOneByOne(cardPool, CardHandToTest);
 
-                // Number of opponents (excluding you)
-                int opponentCount = PlayerCount - 1;
+                // ---------- Readable dealing: exact round size per opponent, leftovers unused ----------
+                int numberOfOpponents = PlayerCount - 1;
+                int cardsPerOpponent = roundSize;
 
-                // Preallocate lists for opponent hands
-                List<Card>[] opponentHands = new List<Card>[opponentCount];
-                for (int i = 0; i < opponentCount; i++)
-                    opponentHands[i] = new List<Card>();
+                // Ensure there are enough cards to deal this round
+                int totalCardsNeeded = numberOfOpponents * cardsPerOpponent;
+                if (cardPool.Count < totalCardsNeeded)
+                    throw new InvalidOperationException("Not enough cards in the pool to deal to all opponents.");
 
-                // Deal remaining cards evenly to opponents
-                // This ensures each opponent has a fixed hand, like in a real round
-                for (int i = 0; i < deckWithoutOwnCards.Count; i++)
+                // Create opponent hands
+                var opponentHands = new List<Card>[numberOfOpponents];
+                for (int opponentIndex = 0; opponentIndex < numberOfOpponents; opponentIndex++)
+                    opponentHands[opponentIndex] = new List<Card>(cardsPerOpponent);
+
+                // cardPool is already shuffled; deal in order for readability
+                int poolIndex = 0;
+                for (int opponentIndex = 0; opponentIndex < numberOfOpponents; opponentIndex++)
                 {
-                    opponentHands[i % opponentCount].Add(deckWithoutOwnCards[i]);
+                    for (int cardIndex = 0; cardIndex < cardsPerOpponent; cardIndex++)
+                    {
+                        opponentHands[opponentIndex].Add(cardPool[poolIndex]);
+                        poolIndex++;
+                    }
                 }
 
-                // Pick a random player to lead the first trick
+                // Remove dealt cards; whatever remains is out of play this round
+                cardPool.RemoveRange(0, totalCardsNeeded);
+                // ---------------------------------------------------------------------------------------
+
+                // Choose a random leader for the first trick
                 int leadPlayer = random.Next(PlayerCount);
 
-                int localWins = 0; // Your wins in this simulation
+                int localWins = 0;
 
-                // Play until your hand is empty (end of round)
-                while (playerHand.Count > 0)
+                // Play exactly "roundSize" tricks (your hand will be empty afterward)
+                for (int trickNo = 0; trickNo < roundSize; trickNo++)
                 {
-                    // Store cards played in this trick
-                    List<Card> trickToTest = new List<Card>(PlayerCount);
+                    // Cards currently on the table, in play order
+                    var cardsInPlay = new List<Card>(PlayerCount);
 
-                    // Track which player plays which card
-                    Card[] playedCards = new Card[PlayerCount];
+                    // Map trick index (0..PlayerCount-1) -> absolute player index (0..PlayerCount-1)
+                    var trickOrderPlayers = new int[PlayerCount];
 
-                    // Players act in order starting from the current lead
-                    for (int i = 0; i < PlayerCount; i++)
+                    // ---- PLAY PHASE ----
+                    for (int turn = 0; turn < PlayerCount; turn++)
                     {
-                        int currentPlayer = (leadPlayer + i) % PlayerCount;
-                        Card cardPlayed;
+                        int currentPlayer = (leadPlayer + turn) % PlayerCount;
+                        trickOrderPlayers[turn] = currentPlayer;
 
-                        if (currentPlayer == 0)
+                        // Select the current player's hand (you are seat 0; opponents are 1..PlayerCount-1)
+                        var hand = (currentPlayer == 0)
+                            ? playerHand
+                            : opponentHands[currentPlayer - 1];
+
+                        // Determine the set of legal plays for this player given the current trick state
+                        var allowed = TrickResolver.GetAllowedCardsToPlay(cardsInPlay, hand);
+                        if (allowed == null || allowed.Count == 0)
+                            throw new InvalidOperationException("No legal plays available — rules/state inconsistency.");
+
+                        // Choose uniformly at random among legal options (dumb/random behavior)
+                        int pickIndex = random.Next(allowed.Count);
+                        Card chosen = allowed[pickIndex];
+
+                        // If the chosen card is a Tigress, declare its mode (Escape or Pirate) before playing
+                        if (chosen is TigressCard tigress)
                         {
-                            // You play a random card from your current hand
-                            int myIdx = random.Next(playerHand.Count);
-                            cardPlayed = playerHand[myIdx];
-                            playerHand.RemoveAt(myIdx);
-                        }
-                        else
-                        {
-                            // Opponent plays a random card from THEIR hand
-                            var oppHand = opponentHands[currentPlayer - 1];
-                            int idx = random.Next(oppHand.Count);
-                            cardPlayed = oppHand[idx];
-                            oppHand.RemoveAt(idx);
+                            tigress.PlayedAsType = (random.Next(2) == 0) ? CardType.ESCAPE : CardType.PIRATE;
                         }
 
-                        trickToTest.Add(cardPlayed);
-                        playedCards[currentPlayer] = cardPlayed;
+                        // Play the card: remove from that player's hand and add to the trick in order
+                        hand.Remove(chosen);     // ensure Card equality removes the same instance
+                        cardsInPlay.Add(chosen);
                     }
 
-                    // Determine trick winner
-                    Card? winnerCard = TrickResolver.DetermineTrickWinnerCard(trickToTest);
+                    // ---- RESOLUTION PHASE ----
+                    // First, try to determine a normal winner; if the trick was destroyed by specials,
+                    // determine who would have won under normal circumstances (for who leads next).
+                    int? winnerTrickIndex = TrickResolver.DetermineTrickWinnerIndex(cardsInPlay);
 
-                    // If trick is a draw, keep the same lead and continue
-                    if (winnerCard == null)
-                        continue;
-
-                    // Find which player played the winning card (loop to avoid LINQ overhead)
-                    int winnerPlayer = -1;
-                    for (int p = 0; p < PlayerCount; p++)
+                    int winnerPlayer;
+                    if (winnerTrickIndex.HasValue)
                     {
-                        Card pc = playedCards[p];
-                        if (pc.CardType == winnerCard.CardType && pc.GenericValue == winnerCard.GenericValue)
-                        {
-                            winnerPlayer = p;
-                            break;
-                        }
+                        // Normal winner: map trick index to absolute player index
+                        winnerPlayer = trickOrderPlayers[winnerTrickIndex.Value];
+                    }
+                    else
+                    {
+                        // Destroyed trick: choose the player who would have won under normal circumstances
+                        int fallbackTrickIndex = TrickResolver.DetermineTrickWinnerIndexNoSpecialCards(cardsInPlay);
+                        winnerPlayer = trickOrderPlayers[fallbackTrickIndex];
                     }
 
-                    // Count win if you were the winner
+                    // Count your win
                     if (winnerPlayer == 0)
                         localWins++;
 
-                    // Winner of this trick leads the next trick
+                    // Winner leads the next trick
                     leadPlayer = winnerPlayer;
                 }
 
-                // Thread-safe total wins accumulation
+                // Aggregate per-simulation result (thread-safe)
                 Interlocked.Add(ref winsTotal, localWins);
-
-                // Thread-safe update of win distribution
                 WinsDistribution.AddOrUpdate(localWins, 1, (_, count) => count + 1);
             });
 
-            // Average win rate (normalized over total tricks played)
+            // Average proportion of tricks you win in a round
             WinRate = (double)winsTotal / (NSimulations * CardHandToTest.Count);
 
-            // Estimated number of tricks you’ll win in the full round
+            // Estimated number of tricks you’ll win across the configured rounds
             TricksWon = WinRate * Rounds;
         }
 
@@ -313,6 +330,147 @@ namespace SkullKingCore.Statistics
 
 #if COMPILE_OLDER_METHODS
 
+        /// <summary>
+        /// Monte Carlo simulation to estimate the number of tricks you will win,
+        /// assuming opponents play randomly ("dumb" play, no strategy).
+        /// 
+        /// Key improvements over original version:
+        /// 1. <b>Randomized starting lead</b> each simulation (removes bias from always starting first).
+        /// 2. <b>Random card selection each trick</b> from your hand (removes fixed play order bias).
+        /// 3. <b>Full hand dealing</b> to opponents before play (models real game state instead of drawing mid-play).
+        /// 4. Tracks <b>full distribution of tricks won</b>, not just average.
+        /// 5. Optimized to reduce LINQ/allocations in the inner loop for better performance at high simulation counts.
+        /// </summary>
+        /// <param name="maxDegreeOfParallelism">Maximum parallel threads to use for simulations.</param>
+        [Obsolete]
+        public void CalculateV3(int maxDegreeOfParallelism = 8)
+        {
+            // Total wins across all simulations
+            int winsTotal = 0;
+
+            // Tracks how many times you win exactly k tricks (k -> frequency)
+            //ConcurrentDictionary<int, int> winsDistribution = new ConcurrentDictionary<int, int>();
+            WinsDistribution = new ConcurrentDictionary<int, int>();
+
+            // Parallel execution settings
+            var options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = maxDegreeOfParallelism
+            };
+
+            // Run simulations in parallel
+            Parallel.For(0, NSimulations, options, simulationCounter =>
+            {
+                // Thread-local random generator
+                var random = new Random(Guid.NewGuid().GetHashCode());
+
+                // Copy your hand for this simulation (CardsToTest = your known hand)
+                List<Card> playerHand = new List<Card>(CardHandToTest);
+
+                // Create and shuffle full deck
+                List<Card> deck = Deck.CreateDeck();
+                deck.Shuffle(random);
+
+                // Remove your cards from the deck to get opponent's card pool
+                List<Card> deckWithoutOwnCards = new List<Card>(deck);
+                RemoveMatchesOneByOne(deckWithoutOwnCards, CardHandToTest);
+
+                // Number of opponents (excluding you)
+                int opponentCount = PlayerCount - 1;
+
+                // Preallocate lists for opponent hands
+                List<Card>[] opponentHands = new List<Card>[opponentCount];
+                for (int i = 0; i < opponentCount; i++)
+                    opponentHands[i] = new List<Card>();
+
+                // Deal remaining cards evenly to opponents
+                // This ensures each opponent has a fixed hand, like in a real round
+                for (int i = 0; i < deckWithoutOwnCards.Count; i++)
+                {
+                    opponentHands[i % opponentCount].Add(deckWithoutOwnCards[i]);
+                }
+
+                // Pick a random player to lead the first trick
+                int leadPlayer = random.Next(PlayerCount);
+
+                int localWins = 0; // Your wins in this simulation
+
+                // Play until your hand is empty (end of round)
+                while (playerHand.Count > 0)
+                {
+                    // Store cards played in this trick
+                    List<Card> trickToTest = new List<Card>(PlayerCount);
+
+                    // Track which player plays which card
+                    Card[] playedCards = new Card[PlayerCount];
+
+                    // Players act in order starting from the current lead
+                    for (int i = 0; i < PlayerCount; i++)
+                    {
+                        int currentPlayer = (leadPlayer + i) % PlayerCount;
+                        Card cardPlayed;
+
+                        if (currentPlayer == 0)
+                        {
+                            // You play a random card from your current hand
+                            int myIdx = random.Next(playerHand.Count);
+                            cardPlayed = playerHand[myIdx];
+                            playerHand.RemoveAt(myIdx);
+                        }
+                        else
+                        {
+                            // Opponent plays a random card from THEIR hand
+                            var oppHand = opponentHands[currentPlayer - 1];
+                            int idx = random.Next(oppHand.Count);
+                            cardPlayed = oppHand[idx];
+                            oppHand.RemoveAt(idx);
+                        }
+
+                        trickToTest.Add(cardPlayed);
+                        playedCards[currentPlayer] = cardPlayed;
+                    }
+
+                    // Determine trick winner
+                    Card? winnerCard = TrickResolver.DetermineTrickWinnerCard(trickToTest);
+
+                    // If trick is a draw, keep the same lead and continue
+                    if (winnerCard == null)
+                        continue;
+
+                    // Find which player played the winning card (loop to avoid LINQ overhead)
+                    int winnerPlayer = -1;
+                    for (int p = 0; p < PlayerCount; p++)
+                    {
+                        Card pc = playedCards[p];
+                        if (pc.CardType == winnerCard.CardType && pc.GenericValue == winnerCard.GenericValue)
+                        {
+                            winnerPlayer = p;
+                            break;
+                        }
+                    }
+
+                    // Count win if you were the winner
+                    if (winnerPlayer == 0)
+                        localWins++;
+
+                    // Winner of this trick leads the next trick
+                    leadPlayer = winnerPlayer;
+                }
+
+                // Thread-safe total wins accumulation
+                Interlocked.Add(ref winsTotal, localWins);
+
+                // Thread-safe update of win distribution
+                WinsDistribution.AddOrUpdate(localWins, 1, (_, count) => count + 1);
+            });
+
+            // Average win rate (normalized over total tricks played)
+            WinRate = (double)winsTotal / (NSimulations * CardHandToTest.Count);
+
+            // Estimated number of tricks you’ll win in the full round
+            TricksWon = WinRate * Rounds;
+        }
+
         [Obsolete]
         public void CalculateV2(int maxDegreeOfParallelism = 8)
         {
@@ -328,24 +486,24 @@ namespace SkullKingCore.Statistics
                 var random = new Random(Guid.NewGuid().GetHashCode());
 
                 // Copy and shuffle your hand
-                List<BaseCard> playerHand = CardsToTest.ToList();
+                List<Card> playerHand = CardsToTest.ToList();
                 playerHand.Shuffle(random);
 
                 // Prepare and shuffle full deck
-                List<BaseCard> deck = Deck.CreateDeck();
+                List<Card> deck = Deck.CreateDeck();
                 deck.Shuffle(random);
 
                 // Remove your cards from deck
-                List<BaseCard> deckWithoutOwnCards = deck.ToList();
+                List<Card> deckWithoutOwnCards = deck.ToList();
                 RemoveMatchesOneByOne(deckWithoutOwnCards, CardsToTest);
 
                 // Number of opponents (excluding you)
                 int opponentCount = PlayerCount - 1;
 
                 // Deal cards evenly to opponents
-                List<List<BaseCard>> opponentHands = new List<List<BaseCard>>();
+                List<List<Card>> opponentHands = new List<List<Card>>();
                 for (int i = 0; i < opponentCount; i++)
-                    opponentHands.Add(new List<BaseCard>());
+                    opponentHands.Add(new List<Card>());
 
                 for (int i = 0; i < deckWithoutOwnCards.Count; i++)
                 {
@@ -358,14 +516,14 @@ namespace SkullKingCore.Statistics
                 // Play one trick per card in your hand
                 while (playerHand.Count > 0)
                 {
-                    List<BaseCard> trickToTest = new List<BaseCard>();
-                    Dictionary<int, BaseCard> playedCards = new Dictionary<int, BaseCard>();
+                    List<Card> trickToTest = new List<Card>();
+                    Dictionary<int, Card> playedCards = new Dictionary<int, Card>();
 
                     // Players play cards in order starting from leadPlayer
                     for (int i = 0; i < PlayerCount; i++)
                     {
                         int currentPlayer = (leadPlayer + i) % PlayerCount;
-                        BaseCard cardPlayed;
+                        Card cardPlayed;
 
                         if (currentPlayer == 0)
                         {
@@ -384,7 +542,7 @@ namespace SkullKingCore.Statistics
                         playedCards[currentPlayer] = cardPlayed;
                     }
 
-                    BaseCard? winnerCard = TrickResolver.DetermineTrickWinnerCard(trickToTest);
+                    Card? winnerCard = TrickResolver.DetermineTrickWinnerCard(trickToTest);
 
                     if (winnerCard == null)
                     {
@@ -427,13 +585,13 @@ namespace SkullKingCore.Statistics
                 // Create new Random per thread (thread-safe)
                 var random = new Random(Guid.NewGuid().GetHashCode());
 
-                List<BaseCard> playerHand = CardsToTest.ToList();
+                List<Card> playerHand = CardsToTest.ToList();
                 playerHand.Shuffle(random);
 
-                List<BaseCard> deck = Deck.CreateDeck();
+                List<Card> deck = Deck.CreateDeck();
                 deck.Shuffle(random);
 
-                List<BaseCard> deckWithoutOwnCards = deck.ToList();
+                List<Card> deckWithoutOwnCards = deck.ToList();
 
                 RemoveMatchesOneByOne(deckWithoutOwnCards, CardsToTest);
 
@@ -441,15 +599,15 @@ namespace SkullKingCore.Statistics
 
                 while (playerHand.Count > 0)
                 {
-                    List<BaseCard> trickToTest = new List<BaseCard>();
+                    List<Card> trickToTest = new List<Card>();
 
-                    BaseCard firstPlayerCard = playerHand[0];
+                    Card firstPlayerCard = playerHand[0];
                     trickToTest.Add(firstPlayerCard);
                     playerHand.RemoveAt(0);
 
                     for (int playerCounter = 1; playerCounter < PlayerCount; playerCounter++)
                     {
-                        BaseCard opponentPlayerCard = deckWithoutOwnCards[0];
+                        Card opponentPlayerCard = deckWithoutOwnCards[0];
                         trickToTest.Add(opponentPlayerCard);
                         deckWithoutOwnCards.RemoveAt(0);
                     }
@@ -457,8 +615,8 @@ namespace SkullKingCore.Statistics
                     // simulate player not always starting and getting advantage
                     trickToTest.Shuffle(random);
 
-                    BaseCard desiredWinner = trickToTest.First(x => x.CardType == firstPlayerCard.CardType && x.GenericValue == firstPlayerCard.GenericValue);
-                    BaseCard? winner = TrickResolver.DetermineTrickWinnerCard(trickToTest);
+                    Card desiredWinner = trickToTest.First(x => x.CardType == firstPlayerCard.CardType && x.GenericValue == firstPlayerCard.GenericValue);
+                    Card? winner = TrickResolver.DetermineTrickWinnerCard(trickToTest);
 
                     if (winner == desiredWinner)
                     {
