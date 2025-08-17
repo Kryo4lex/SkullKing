@@ -64,7 +64,7 @@ namespace SkullKingConsole.Controller
                         ((TigressCard)card).PlayedAsType = CardType.ESCAPE;
                         break;
                     case "P":
-                    ((TigressCard)card).PlayedAsType = CardType.PIRATE;
+                        ((TigressCard)card).PlayedAsType = CardType.PIRATE;
                         break;
                 }
 

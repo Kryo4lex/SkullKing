@@ -6,12 +6,12 @@ using SkullKingCore.GameDefinitions;
 namespace SkullKingCore.Core.Game
 {
 
-    public class MatchRunner
+    public class GameHandler
     {
         private readonly GameState _state;
         private readonly Dictionary<string, IGameController> _controllers;
 
-        public MatchRunner(List<Player> players, int startRound, int maxRounds, Dictionary<string, IGameController> controllers)
+        public GameHandler(List<Player> players, int startRound, int maxRounds, Dictionary<string, IGameController> controllers)
         {
             _controllers = controllers ?? throw new ArgumentNullException(nameof(controllers));
             _state = new GameState(players, startRound, maxRounds, Deck.CreateDeck());
