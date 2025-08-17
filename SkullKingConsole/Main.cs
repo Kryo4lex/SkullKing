@@ -102,7 +102,7 @@ namespace SkullKingConsole
             controllers[humanPlayer.Id] = new LocalConsoleHumanController(humanPlayer.Name);
 
             // 3. Create the game state with, e.g., 5 rounds
-            var match = new MatchRunner(players, startRound: 5, maxRounds: 5, controllers);
+            var match = new GameHandler(players, startRound: 5, maxRounds: 5, controllers);
 
             // 4. Run the game
             await match.RunGameAsync();
@@ -129,7 +129,7 @@ namespace SkullKingConsole
             }
 
             // 3. Create the game state with, e.g., 5 rounds
-            MatchRunner match = new MatchRunner(players, startRound: 5, maxRounds: 5, controllers);
+            GameHandler match = new GameHandler(players, startRound: 5, maxRounds: 5, controllers);
 
             // 4. Run the game
             await match.RunGameAsync();

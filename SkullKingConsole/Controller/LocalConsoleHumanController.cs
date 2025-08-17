@@ -53,7 +53,7 @@ namespace SkullKingConsole.Controller
                 string? choice;
                 do
                 {
-                    Logger.Instance.WriteToConsoleAndLog("Enter E (Escape) or P (Pirate): ");
+                    Logger.Instance.WriteToConsoleAndLog("Enter E (Escape) or P (Pirate) and confirm: ");
                     choice = Console.ReadLine()?.Trim().ToUpperInvariant();
                 }
                 while (choice != "E" && choice != "P");
