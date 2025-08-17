@@ -208,5 +208,11 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
+        public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player, string phase)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"{player.Name} timed put!");
+
+            return Task.CompletedTask;
+        }
     }
 }

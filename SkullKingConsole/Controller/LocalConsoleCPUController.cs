@@ -158,5 +158,10 @@ namespace SkullKingConsole.Controller
         {
             return Task.CompletedTask;
         }
+
+        public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player, string phase)
+        {
+            return Task.CompletedTask;
+        }
     }
 }
