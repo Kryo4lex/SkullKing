@@ -6,7 +6,7 @@ using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 using SkullKingCore.Utility.UserInput;
 
-namespace SkullKingConsole.Controller
+namespace SkullKingCore.Controller
 {
 
     public class LocalConsoleHumanController : IGameController
@@ -21,7 +21,7 @@ namespace SkullKingConsole.Controller
             Name = name;
         }
 
-        public Task NotifyGameStartedAsync(GameState state)
+        public Task NotifyGameStartedAsync(GameState gameState)
         {
             Console.Clear();
 
@@ -30,7 +30,7 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
-        public Task<Card> RequestCardPlayAsync(GameState state, List<Card> hand, TimeSpan maxWait)
+        public Task<Card> RequestCardPlayAsync(GameState gameState, List<Card> hand, TimeSpan maxWait)
         {
 
             int cardToPlayIndex = 0;
@@ -163,18 +163,18 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutSubRoundStartAsync(GameState state)
+        public Task NotifyAboutSubRoundStartAsync(GameState gameState)
         {
             Console.Clear();
-            Logger.Instance.WriteToConsoleAndLog($"--- Sub round {state.CurrentSubRound}/{state.MaxRounds} started ---");
+            Logger.Instance.WriteToConsoleAndLog($"--- Sub round {gameState.CurrentSubRound}/{gameState.MaxRounds} started ---");
 
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutSubRoundEndAsync(GameState state)
+        public Task NotifyAboutSubRoundEndAsync(GameState gameState)
         {
             //no need to tell console CPU what is happening
-            Logger.Instance.WriteToConsoleAndLog($"--- Sub round {state.CurrentSubRound}/{state.MaxRounds} ended ---");
+            Logger.Instance.WriteToConsoleAndLog($"--- Sub round {gameState.CurrentSubRound}/{gameState.MaxRounds} ended ---");
             Logger.Instance.WriteToConsoleAndLog($"Press Any Key to continue");
             Console.ReadLine();
 
@@ -208,7 +208,7 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player, string phase)
+        public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player)
         {
             Logger.Instance.WriteToConsoleAndLog($"{player.Name} timed put!");
 

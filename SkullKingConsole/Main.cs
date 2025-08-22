@@ -1,176 +1,137 @@
-﻿using SkullKingConsole.Controller;
+﻿using SkullKingConsole.Commands;
+using SkullKingCore.Controller;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
-using SkullKingCore.Network;
-using SkullKingCore.Network.Client;
-using SkullKingCore.Network.Server;
-using System.Net;
-using System.Net.Sockets;
+using SkullKingCore.Logging;
+using SkullKingCore.Utility.UserInput;
 
 namespace SkullKingConsole
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+
+        public static Dictionary<int, (string Description, Action Action)> Options = new Dictionary<int, (string, Action)>
         {
-            await RunAsync(args);
-        }
+            { 0, ($"Exit Application", ExitMain) },
+            { 1, ($"Trick Tests", CommandTrickTests.Run) },
+            { 2, ($"Win Probability Single Card", CommandSimulationWinProbabilitySingleGameCard.Run) },
+            { 3, ($"Win Probability All Game Cards", CommandWinProbabilityOfAllGameCards.Run) },
+            { 4, ($"Card Hand Win Probability", CommandCardHandWinProbability.Run) },
+            { 5, ($"General Card Mightiness", CommandGeneralCardMightiness.Run) },
+            { 6, ($"Trick Simulation", CommandTrickSimulation.Run) },
+        };
 
-        private static async Task RunAsync(string[] args)
+        public static void Main(string[] args)
         {
-            Console.WriteLine("Skull King – Test Harness");
-            Console.WriteLine("[H]ost a game  or  [J]oin a game?");
-            var mode = ReadKey("H", "J");
 
-            if (mode == "H") await HostFlowAsync();
-            else await JoinFlowAsync();
-        }
+            Logger.Instance.Initialize($"{nameof(SkullKingConsole)}_log.txt");
 
-        // ──────────────────────────────────────────────────────────────────
-        // HOST FLOW
-        // ──────────────────────────────────────────────────────────────────
-        private static async Task HostFlowAsync()
-        {
-            string ip = ReadString("Listen IP", "127.0.0.1");
-            int port = ReadInt("Listen port", 5055, min: 1, max: 65535);
-
-            int netSeats = ReadInt("Number of NETWORK players (remote)", 1, min: 0, max: 8);
-            int humanSeats = ReadInt("Number of LOCAL HUMAN players", 1, min: 0, max: 8);
-            int botSeats = ReadInt("Number of CPU/BOT players", 0, min: 0, max: 8);
-
-            int totalPlayers = netSeats + humanSeats + botSeats;
-            if (totalPlayers < 2)
+            while (true)
             {
-                Console.WriteLine("You need at least 2 total players. Aborting.");
-                return;
-            }
 
-            int startRound = ReadInt("Start round", 1, 1, 10);
-            int maxRounds = ReadInt("Max rounds", Math.Max(3, startRound), startRound, 10);
+                PrintOptions();
 
-            // 1) Start listener & accept network players (if any)
-            var links = new List<INetworkLink>();
-            TcpListener? listener = null;
-            if (netSeats > 0)
-            {
-                listener = new TcpListener(IPAddress.Parse(ip), port);
-                listener.Start();
-                Console.WriteLine($"[SERVER] Listening on {ip}:{port} — waiting for {netSeats} network player(s) to connect…");
-
-                for (int i = 0; i < netSeats; i++)
+                if (UserInput.TryReadInt($"{Environment.NewLine}Choose an option:", out int choice))
                 {
-                    var link = await TcpJsonLink.AcceptAsync(listener);
-                    links.Add(link);
-                    _ = link.RunAsync(); // background receive
-                    Console.WriteLine($"[SERVER] Network player {i + 1} connected.");
+                    if (Options.TryGetValue(choice, out var actionTuple))
+                    {
+                        Logger.Instance.WriteToConsoleAndLog($"{actionTuple.Description}");
+
+                        actionTuple.Action();
+
+                        Console.ReadLine();
+                    }
+                    else
+                    {
+                        Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Not an option. Try again.{Environment.NewLine}");
+                    }
                 }
+                else
+                {
+                    Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Invalid number. Try again.{Environment.NewLine}");
+                }
+
             }
 
-            // 2) Build player objects & controllers
-            var players = new List<Player>(totalPlayers);
-            var controllers = new Dictionary<string, IGameController>(totalPlayers);
-
-            int seatIndex = 0;
-
-            // Local humans
-            for (int i = 0; i < humanSeats; i++, seatIndex++)
-            {
-                var id = $"P{seatIndex + 1}";
-                var name = $"LocalHuman{(i + 1)}";
-                players.Add(new Player(id, name));
-                controllers[id] = new LocalConsoleHumanController(name);
-            }
-
-            // Bots (your LocalConsoleCPUController, or swap to a simple DumbCpuController)
-            for (int i = 0; i < botSeats; i++, seatIndex++)
-            {
-                var id = $"P{seatIndex + 1}";
-                var name = $"CPU{i + 1}";
-                players.Add(new Player(id, name));
-                controllers[id] = new LocalConsoleCPUController(name);
-            }
-
-            // Network
-            for (int i = 0; i < netSeats; i++, seatIndex++)
-            {
-                var id = $"P{seatIndex + 1}";
-                var name = $"Net{i + 1}";
-                players.Add(new Player(id, name));
-                controllers[id] = new NetworkController(id, name, links[i]);
-            }
-
-            Console.WriteLine($"[SERVER] Seating complete → {players.Count} players.");
-            foreach (var p in players)
-                Console.WriteLine($"  - {p.Id}: {p.Name} ({controllers[p.Id].GetType().Name})");
-
-            // 3) Run the game
-            var handler = new GameHandler(players, startRound, maxRounds, controllers);
-            await handler.RunGameAsync();
-
-            // 4) Cleanup
-            foreach (var link in links)
-                await link.DisposeAsync();
-            listener?.Stop();
-
-            Console.WriteLine("[SERVER] Game finished. Press Enter to exit.");
-            Console.ReadLine();
         }
 
-        // ──────────────────────────────────────────────────────────────────
-        // JOIN FLOW (client)
-        // ──────────────────────────────────────────────────────────────────
-        private static async Task JoinFlowAsync()
+        private static async void ConsoleCPUAndHumanControllerTest()
         {
-            string host = ReadString("Server IP", "127.0.0.1");
-            int port = ReadInt("Server port", 5055, min: 1, max: 65535);
-            string playerName = ReadString("Your player name", "Player");
 
-            Console.WriteLine($"[CLIENT] Connecting to {host}:{port} as {playerName}…");
-            await using var link = await TcpJsonLink.ConnectAsync(host, port);
-            var agent = new ConsoleClientAgent(playerName);
-            var adapter = new ControllerNetworkAdapter(link, agent);
-            adapter.Register();
+            // 1. Create players
+            var players = new List<Player>();
 
-            Console.WriteLine("[CLIENT] Connected. Waiting for server…");
-            await link.RunAsync();
-
-            Console.WriteLine("[CLIENT] Disconnected. Press Enter to exit.");
-            Console.ReadLine();
-        }
-
-        // ──────────────────────────────────────────────────────────────────
-        // Small helpers
-        // ──────────────────────────────────────────────────────────────────
-        private static string ReadKey(params string[] allowed)
-        {
-            var normalized = allowed.Select(a => a.Trim().ToUpperInvariant()).ToHashSet();
-            while (true)
+            for (int i = 1; i <= 3; i++)
             {
-                Console.Write("> ");
-                var input = Console.ReadLine()?.Trim().ToUpperInvariant();
-                if (!string.IsNullOrEmpty(input) && normalized.Contains(input))
-                    return input;
-                Console.WriteLine($"Please enter one of: {string.Join("/", allowed)}");
+                Player player = new Player($"{i}", $"CPU_{i}");
+
+                players.Add(player);
             }
-        }
 
-        private static string ReadString(string prompt, string def)
-        {
-            Console.Write($"{prompt} [{def}]: ");
-            var s = Console.ReadLine();
-            return string.IsNullOrWhiteSpace(s) ? def : s.Trim();
-        }
+            Player humanPlayer = new Player("Human", "Human");
 
-        private static int ReadInt(string prompt, int def, int min = int.MinValue, int max = int.MaxValue)
-        {
-            while (true)
+            players.Add(humanPlayer);
+
+            // 2. Create controllers for each player
+            var controllers = new Dictionary<string, IGameController>();
+            foreach (var player in players)
             {
-                Console.Write($"{prompt} [{def}]: ");
-                var s = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(s)) return def;
-                if (int.TryParse(s, out var v) && v >= min && v <= max) return v;
-                Console.WriteLine($"Enter a number between {min} and {max}.");
+                controllers[player.Id] = new LocalConsoleCPUController(player.Name);
             }
+
+            controllers[humanPlayer.Id] = new LocalConsoleHumanController(humanPlayer.Name);
+
+            // 3. Create the game state with, e.g., 5 rounds
+            var match = new GameHandler(players, startRound: 5, maxRounds: 5, controllers);
+
+            // 4. Run the game
+            await match.RunGameAsync();
         }
+
+        private static async void ConsoleCPUControllerTest()
+        {
+
+            // 1. Create playersS
+            var players = new List<Player>();
+
+            for (int i = 1; i <= 4; i++)
+            {
+                Player player = new Player($"{i}", $"CPU_{i}");
+
+                players.Add(player);
+            }
+
+            // 2. Create controllers for each player
+            var controllers = new Dictionary<string, IGameController>();
+            foreach (var player in players)
+            {
+                controllers[player.Id] = new LocalConsoleCPUController(player.Name);
+            }
+
+            // 3. Create the game state with, e.g., 5 rounds
+            GameHandler match = new GameHandler(players, startRound: 5, maxRounds: 5, controllers);
+
+            // 4. Run the game
+            await match.RunGameAsync();
+        }
+
+        private static void PrintOptions()
+        {
+
+            foreach (var kvp in Options)
+            {
+                Logger.Instance.WriteToConsoleAndLog($"{kvp.Key} - {kvp.Value.Description}");
+            }
+
+        }
+
+        private static void ExitMain()
+        {
+
+            Logger.Instance.WriteToConsoleAndLog("Exiting...");
+            Environment.Exit(0);
+
+        }
+
     }
 }

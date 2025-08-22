@@ -5,7 +5,7 @@ using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 
-namespace SkullKingConsole.Controller
+namespace SkullKingCore.Controller
 {
 
     public class LocalConsoleCPUController : IGameController
@@ -20,13 +20,13 @@ namespace SkullKingConsole.Controller
             Name = name;
         }
 
-        public Task NotifyGameStartedAsync(GameState state)
+        public Task NotifyGameStartedAsync(GameState gameState)
         {
 
             return Task.CompletedTask;
         }
 
-        public Task<Card> RequestCardPlayAsync(GameState state, List<Card> hand, TimeSpan maxWait)
+        public Task<Card> RequestCardPlayAsync(GameState gameState, List<Card> hand, TimeSpan maxWait)
         {
 
             Card? card = hand[_random.Next(hand.Count)];
@@ -108,7 +108,7 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutSubRoundStartAsync(GameState state)
+        public Task NotifyAboutSubRoundStartAsync(GameState gameState)
         {
             //no need to tell console CPU what is happening
             //Logger.Instance.WriteToConsoleAndLog($"Sub round {state.CurrentSubRound}/{state.MaxRounds} started.");
@@ -116,7 +116,7 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutSubRoundEndAsync(GameState state)
+        public Task NotifyAboutSubRoundEndAsync(GameState gameState)
         {
             //no need to tell console CPU what is happening
             //Logger.Instance.WriteToConsoleAndLog($"Sub round {state.CurrentSubRound}/{state.MaxRounds} ended.");
@@ -159,7 +159,7 @@ namespace SkullKingConsole.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player, string phase)
+        public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player)
         {
             return Task.CompletedTask;
         }
