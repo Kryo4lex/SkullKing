@@ -22,7 +22,7 @@ namespace SkullKingCore.Core.Cards.Implementations
 
             if(number < MinValue || number > MaxValue)
             {
-                throw new ArgumentException($"Card's number must be between {MinValue} and {MaxValue}");
+                throw new ArgumentException($"Card's number must be between {MinValue} and {MaxValue}. Actual number: {number}");
             }
 
             Number = number;

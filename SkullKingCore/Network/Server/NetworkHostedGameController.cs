@@ -4,21 +4,24 @@
 
 #nullable enable
 
-using SkullKingCore.Network.Networking;
+using SkullKing.Network.Rpc.Dtos;
 using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
+using SkullKingCore.Network.Networking;
+using SkullKingCore.Network.Networking.Payload;
+using SkullKingCore.Network.Rpc.Dto;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
-using static SkullKingCore.Network.Rpc.Dtos;
 
 namespace SkullKing.Network.Server
 {
     public sealed class NetworkHostedGameController : IGameController, IAsyncDisposable
     {
+        private readonly string _playerId;
         private readonly TcpListener _listener;
         private readonly CancellationTokenSource _cts = new();
         private Task? _acceptLoop;
@@ -28,8 +31,9 @@ namespace SkullKing.Network.Server
 
         public string Name { get; } = String.Empty;
 
-        public NetworkHostedGameController(int port)
+        public NetworkHostedGameController(int port, string playerId)
         {
+            _playerId = playerId;
             Port = port;
             _listener = new TcpListener(IPAddress.Any, port);
             _listener.Start();
@@ -92,8 +96,8 @@ namespace SkullKing.Network.Server
 
         private static CardViewDto ToView(Card c, int index) => new()
         {
-            Index = index,
             CardType = c.CardType.ToString(),
+            GenericValue = c.GenericValue,
             Display = c.ToString()
         };
 
@@ -127,29 +131,48 @@ namespace SkullKing.Network.Server
         public Task WaitForBidsReceivedAsync(GameState gameState)
             => CallAsync(nameof(WaitForBidsReceivedAsync), new WaitForBidsReceivedPayload { GameState = ToDto(gameState) });
 
-        public async Task<int> RequestBidAsync(GameState gameState, int roundNumer, TimeSpan maxWait)
+        public async Task<int> RequestBidAsync(GameState gameState, int roundNumber, TimeSpan maxWait)
         {
+            var me = GetThisPlayer(gameState);
+
             var res = await CallAsync<RequestBidPayload, RequestBidResult>(
                 nameof(RequestBidAsync),
                 new RequestBidPayload
                 {
-                    GameState = ToDto(gameState),
-                    RoundNumber = roundNumer,
-                    MaxWaitMs = (int)Math.Min(int.MaxValue, maxWait.TotalMilliseconds)
-                }).ConfigureAwait(false);
+                    GameState = DtoMapper.ToGameStateDtoForViewer(gameState, _playerId), // shows only my hand in Players list
+                    RoundNumber = roundNumber,
+                    MaxWaitMs = (int)Math.Min(int.MaxValue, maxWait.TotalMilliseconds),
+                    Hand = DtoMapper.ToCardDtos(me.Hand) // <-- explicitly include my hand for the screen
+                });
 
             if (res is null) throw new InvalidOperationException("Client returned no bid.");
             return res.Bid;
         }
 
         public Task AnnounceBidAsync(GameState gameState, Player player, int bid, TimeSpan maxWait)
-            => CallAsync(nameof(AnnounceBidAsync), new AnnounceBidPayload
+        {
+            var payload = new AnnounceBidPayload
             {
-                GameState = ToDto(gameState),
-                Player = new PlayerDto { Id = player.Id, Name = player.Name },
+                // Always-expanded state: ALL players with full Hands + Bids
+                GameState = DtoMapper.ToGameStateDto(gameState),
+
+                // The specific announcing player (also with full Hand + Bids)
+                Player = new PlayerDto
+                {
+                    Id = player.Id,
+                    Name = player.Name,
+                    Hand = DtoMapper.ToCardDtos(player.Hand),
+                    Bids = DtoMapper.ToBidDtos(player.Bids)
+                },
+
                 Bid = bid,
-                MaxWaitMs = (int)Math.Min(int.MaxValue, maxWait.TotalMilliseconds)
-            });
+                MaxWaitMs = maxWait == Timeout.InfiniteTimeSpan
+                    ? -1
+                    : (int)Math.Min(int.MaxValue, maxWait.TotalMilliseconds)
+            };
+
+            return CallAsync(nameof(IGameController.AnnounceBidAsync), payload);
+        }
 
         public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> cardsThatPlayerIsAllowedToPlay, List<Card> cardsThatPlayerIsNotAllowedToPlay)
             => CallAsync(nameof(NotifyNotAllCardsInHandCanBePlayed), new NotAllCardsPlayablePayload
@@ -234,6 +257,10 @@ namespace SkullKing.Network.Server
             try { _clientStream?.Dispose(); } catch { }
             _cts.Dispose();
         }
+
+        // helper to get this controller’s player from the state
+        private Player GetThisPlayer(GameState s)
+            => s.Players.First(p => p.Id == _playerId);
     }
 
     // -------------------- Transport envelopes (JSON) --------------------
@@ -250,64 +277,4 @@ namespace SkullKing.Network.Server
         public TResult? Result { get; set; }
     }
 
-    // ------------ Payloads and Results per method ------------
-
-    internal sealed class NotifyRoundStartedPayload { public GameStateDto GameState { get; set; } = new(); }
-    internal sealed class NotifyBidCollectionStartedPayload { public GameStateDto GameState { get; set; } = new(); }
-    internal sealed class WaitForBidsReceivedPayload { public GameStateDto GameState { get; set; } = new(); }
-    internal sealed class NotifyGameStartedPayload { public GameStateDto GameState { get; set; } = new(); }
-    internal sealed class NotifySubRoundStartPayload { public GameStateDto GameState { get; set; } = new(); }
-    internal sealed class NotifySubRoundEndPayload { public GameStateDto GameState { get; set; } = new(); }
-    internal sealed class NotifyGameEndedPayload { public GameStateDto GameState { get; set; } = new(); }
-    internal sealed class GameWinnersPayload { public GameStateDto GameState { get; set; } = new(); public List<PlayerDto> Winners { get; set; } = new(); }
-    internal sealed class PlayerTimedOutPayload { public GameStateDto GameState { get; set; } = new(); public PlayerDto Player { get; set; } = new(); }
-    internal sealed class ShowMessagePayload { public string Message { get; set; } = ""; }
-
-    internal sealed class AnnounceBidPayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public PlayerDto Player { get; set; } = new();
-        public int Bid { get; set; }
-        public int MaxWaitMs { get; set; }
-    }
-
-    internal sealed class NotAllCardsPlayablePayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public List<CardViewDto> Allowed { get; set; } = new();
-        public List<CardViewDto> NotAllowed { get; set; } = new();
-    }
-
-    internal sealed class RequestBidPayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public int RoundNumber { get; set; }
-        public int MaxWaitMs { get; set; }
-    }
-    internal sealed class RequestBidResult { public int Bid { get; set; } }
-
-    internal sealed class RequestCardPlayPayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public List<CardViewDto> Hand { get; set; } = new();
-        public int MaxWaitMs { get; set; }
-    }
-    internal sealed class RequestCardPlayResult
-    {
-        public int Index { get; set; }          // which card in Hand was chosen
-        public string? TigressMode { get; set; } // optional: "Escape" or "Pirate"
-    }
-
-    internal sealed class NotifyCardPlayedPayload
-    {
-        public PlayerDto Player { get; set; } = new();
-        public CardViewDto Card { get; set; } = new();
-    }
-
-    internal sealed class SubRoundWinnerPayload
-    {
-        public PlayerDto? Player { get; set; }
-        public CardViewDto? WinningCard { get; set; }
-        public int Round { get; set; }
-    }
 }

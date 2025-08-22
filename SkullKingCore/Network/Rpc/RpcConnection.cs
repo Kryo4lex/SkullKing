@@ -65,20 +65,24 @@ namespace SkullKingCore.Network.Rpc
                     catch (Exception ex)
                     {
                         var bad = new RpcResponse<object?> { Error = $"Bad request: {ex.Message}" };
-                        await Framing.WriteFrameAsync(_stream, JsonSerializer.SerializeToUtf8Bytes(bad, Json), _cts.Token)
-                                     .ConfigureAwait(false);
+                        var badBytes = JsonSerializer.SerializeToUtf8Bytes(bad, Json);
+                        await Framing.WriteFrameAsync(_stream, badBytes, _cts.Token).ConfigureAwait(false);
                         continue;
                     }
+
+                    Console.WriteLine($"[CLIENT] <= {env.Method}");
 
                     RpcResponse<object?> resp;
                     try
                     {
                         var result = await _handler(env.Method, env.Payload).ConfigureAwait(false);
                         resp = new RpcResponse<object?> { Result = result };
+                        Console.WriteLine($"[CLIENT] => {env.Method} (ok)");
                     }
                     catch (Exception ex)
                     {
                         resp = new RpcResponse<object?> { Error = ex.Message };
+                        Console.WriteLine($"[CLIENT] => {env.Method} (error: {ex.Message})");
                     }
 
                     var outBytes = JsonSerializer.SerializeToUtf8Bytes(resp, Json);
@@ -86,12 +90,17 @@ namespace SkullKingCore.Network.Rpc
                 }
             }
             catch (OperationCanceledException) { /* normal */ }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CLIENT] Loop error: {ex}");
+            }
             finally
             {
                 try { _stream.Dispose(); } catch { }
                 try { _client.Dispose(); } catch { }
             }
         }
+
 
         public async ValueTask DisposeAsync()
         {

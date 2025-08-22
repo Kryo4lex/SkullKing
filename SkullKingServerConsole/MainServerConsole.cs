@@ -61,7 +61,7 @@ internal class MainServerConsole
             var player = new Player(name, name);
             players.Add(player);
 
-            var controller = new NetworkHostedGameController(port);
+            var controller = new NetworkHostedGameController(port, player.Id);
             hostedNetworkControllers.Add(controller);
             controllers[player.Id] = controller;
         }

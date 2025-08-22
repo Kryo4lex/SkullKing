@@ -1,11 +1,12 @@
 ﻿#nullable enable
 
-using SkullKing.Network.Server;
 using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Factory;
 using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.Core.Game;
-using static SkullKingCore.Network.Rpc.Dtos;
+using SkullKingCore.Network.Rpc.Dto;
+using PlayerPredictedWins = SkullKingCore.Core.Game.Player.PredictedWins;
+using PlayerRound = SkullKingCore.Core.Game.Player.Round;
 
 namespace SkullKing.Network.Rpc.Dtos
 {
@@ -21,14 +22,12 @@ namespace SkullKing.Network.Rpc.Dtos
 
             var dto = new CardViewDto
             {
-                Index = index,
                 CardType = card.CardType.ToString(),
                 Display = card.ToString(),
-                Value = null,
                 TigressMode = null
             };
 
-            if (card is NumberCard n) dto.Value = n.Number;
+            if (card is NumberCard n) dto.GenericValue = n.Number;
 
             if (card is TigressCard tig)
             {
@@ -54,8 +53,9 @@ namespace SkullKing.Network.Rpc.Dtos
             if (!Enum.TryParse<SkullKingCore.GameDefinitions.CardType>(dto.CardType, true, out var type))
                 throw new InvalidOperationException($"Unknown card type: {dto.CardType}");
 
-            int value = (int)(dto.Value ?? -1); // only meaningful for NUMBER
-            Card card = CardFactory.Create(type, value);
+            int genericValue = dto.GenericValue.HasValue ? dto.GenericValue.Value : -1;
+
+            Card card = CardFactory.Create(type, genericValue);
 
             ApplyTigressModeIfAny(card, dto.TigressMode);
             return card;
@@ -90,49 +90,108 @@ namespace SkullKing.Network.Rpc.Dtos
         }
 
         // --------------------------
-        // PLAYER -> PlayerDto
+        // DTO -> Domain Player
         // --------------------------
 
-        public static PlayerDto ToPlayerDto(Player p, bool includeHand = true)
+        public static Player ToDomainPlayer(PlayerDto dto)
+        {
+            if (dto is null) throw new ArgumentNullException(nameof(dto));
+
+            var player = new Player(dto.Id, dto.Name);
+
+            // Hand
+            player.Hand.Clear();
+            if (dto.Hand is not null && dto.Hand.Count > 0)
+            {
+                var cards = CardsFromDtos(dto.Hand);
+                player.Hand.AddRange(cards);
+            }
+
+            // Bids
+            player.Bids.Clear();
+            if (dto.Bids is not null && dto.Bids.Count > 0)
+            {
+                var bids = BidsFromDtos(dto.Bids);
+                foreach (var kvp in bids)
+                    player.Bids[kvp.Key] = kvp.Value;
+            }
+
+            return player;
+        }
+
+        public static List<Player> ToDomainPlayers(IEnumerable<PlayerDto> dtos)
+        {
+            if (dtos is null) throw new ArgumentNullException(nameof(dtos));
+            return dtos.Select(ToDomainPlayer).ToList();
+        }
+
+        // --------------------------
+        // PLAYER -> PlayerDto  (ALWAYS include Hand + Bids)
+        // --------------------------
+
+        public static PlayerDto ToPlayerDto(Player p)
         {
             if (p is null) throw new ArgumentNullException(nameof(p));
             return new PlayerDto
             {
                 Id = p.Id,
                 Name = p.Name,
-                Hand = includeHand && p.Hand is not null ? ToCardDtos(p.Hand) : new List<CardViewDto>()
+                Hand = p.Hand is not null ? ToCardDtos(p.Hand) : new List<CardViewDto>(),
+                Bids = ToBidDtos(p.Bids)
             };
         }
 
-        public static List<PlayerDto> ToPlayerDtos(IEnumerable<Player> players, bool includeHands = false)
+        public static List<PlayerDto> ToPlayerDtos(IEnumerable<Player> players)
         {
             if (players is null) throw new ArgumentNullException(nameof(players));
-            return players.Select(p => ToPlayerDto(p, includeHands)).ToList();
+            var list = new List<PlayerDto>();
+            foreach (var p in players)
+                list.Add(ToPlayerDto(p)); // full hands + bids for everyone
+            return list;
         }
 
-        // Viewer-specific projection (only show the viewer's hand)
+        // --------------------------
+        // Bids <-> BidDto
+        // --------------------------
+
+        public static List<BidDto> ToBidDtos(
+            IReadOnlyDictionary<PlayerRound, PlayerPredictedWins> bids)
+        {
+            if (bids is null) throw new ArgumentNullException(nameof(bids));
+            var list = new List<BidDto>(bids.Count);
+            foreach (var kvp in bids)
+                list.Add(new BidDto { Round = kvp.Key.Value, PredictedWins = kvp.Value.Value });
+            return list;
+        }
+
+        public static Dictionary<PlayerRound, PlayerPredictedWins> BidsFromDtos(
+            IEnumerable<BidDto> dtos)
+        {
+            if (dtos is null) throw new ArgumentNullException(nameof(dtos));
+            var dict = new Dictionary<PlayerRound, PlayerPredictedWins>();
+            foreach (var b in dtos)
+                dict[new PlayerRound(b.Round)] = new PlayerPredictedWins(b.PredictedWins);
+            return dict;
+        }
+
+        // --------------------------
+        // GameState -> GameStateDto (ALWAYS expanded)
+        // --------------------------
+
         public static GameStateDto ToGameStateDtoForViewer(GameState s, string viewerPlayerId)
         {
+            // Intentionally ignore viewerPlayerId: include everything for everyone.
             if (s is null) throw new ArgumentNullException(nameof(s));
-            if (viewerPlayerId is null) throw new ArgumentNullException(nameof(viewerPlayerId));
-
-            var players = new List<PlayerDto>(s.Players.Count);
-            foreach (var p in s.Players)
-            {
-                bool includeHand = p.Id == viewerPlayerId;
-                players.Add(ToPlayerDto(p, includeHand));
-            }
 
             return new GameStateDto
             {
                 CurrentRound = s.CurrentRound,
                 CurrentSubRound = s.CurrentSubRound,
                 MaxRounds = s.MaxRounds,
-                Players = players
+                Players = ToPlayerDtos(s.Players) // full Hand + Bids for each player
             };
         }
 
-        // Generic summary (no hands)
         public static GameStateDto ToGameStateDto(GameState s)
         {
             if (s is null) throw new ArgumentNullException(nameof(s));
@@ -141,15 +200,8 @@ namespace SkullKing.Network.Rpc.Dtos
                 CurrentRound = s.CurrentRound,
                 CurrentSubRound = s.CurrentSubRound,
                 MaxRounds = s.MaxRounds,
-                Players = ToPlayerDtos(s.Players, includeHands: false)
+                Players = ToPlayerDtos(s.Players) // full Hand + Bids for each player
             };
-        }
-
-        // Overload for convenience
-        public static List<Card> ToDomainCards(List<CardViewDto> dtos)
-        {
-            if (dtos is null) throw new ArgumentNullException(nameof(dtos));
-            return dtos.Select(ToDomainCard).ToList();
         }
 
     }

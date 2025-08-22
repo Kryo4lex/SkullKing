@@ -1,93 +1,17 @@
-﻿// SkullKingConsoleClient/Program.cs
-// Console client for Skull King network play (JSON DTO transport).
-// Prompts for host/port, connects, and handles all IGameController calls.
-
-#nullable enable
+﻿#nullable enable
 
 using SkullKing.Network.Rpc.Dtos;
 using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
+using SkullKingCore.Network.Networking.Payload;
 using SkullKingCore.Network.Rpc;
 using SkullKingCore.Utility.UserInput;
 using System.Text.Json;
-using static SkullKingCore.Network.Rpc.Dtos;
-// RpcConnection, RpcEnvelope<T>, RpcResponse<T>
 
 internal static class Program
 {
-
-    // payloads / results
-    private sealed class NotifyRoundStartedPayload { public GameStateDto GameState { get; set; } = new(); }
-    private sealed class NotifyBidCollectionStartedPayload { public GameStateDto GameState { get; set; } = new(); }
-    private sealed class WaitForBidsReceivedPayload { public GameStateDto GameState { get; set; } = new(); }
-    private sealed class NotifyGameStartedPayload { public GameStateDto GameState { get; set; } = new(); }
-    private sealed class NotifySubRoundStartPayload { public GameStateDto GameState { get; set; } = new(); }
-    private sealed class NotifySubRoundEndPayload { public GameStateDto GameState { get; set; } = new(); }
-    private sealed class NotifyGameEndedPayload { public GameStateDto GameState { get; set; } = new(); }
-
-    private sealed class AnnounceBidPayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public PlayerDto Player { get; set; } = new();
-        public int Bid { get; set; }
-        public int MaxWaitMs { get; set; }
-    }
-
-    private sealed class NotAllCardsPlayablePayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public List<CardViewDto> Allowed { get; set; } = new();
-        public List<CardViewDto> NotAllowed { get; set; } = new();
-    }
-
-    private sealed class RequestBidPayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public int RoundNumber { get; set; }
-        public int MaxWaitMs { get; set; }
-    }
-
-    private sealed class RequestBidResult { public int Bid { get; set; } }
-
-    private sealed class RequestCardPlayPayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public List<CardViewDto> Hand { get; set; } = new();
-        public int MaxWaitMs { get; set; }
-    }
-
-    private sealed class RequestCardPlayResult
-    {
-        public int Index { get; set; }           // chosen index in Hand
-        public string? TigressMode { get; set; } // "Escape" | "Pirate" | null
-    }
-
-    private sealed class NotifyCardPlayedPayload
-    {
-        public PlayerDto Player { get; set; } = new();
-        public CardViewDto Card { get; set; } = new();
-    }
-
-    private sealed class SubRoundWinnerPayload
-    {
-        public PlayerDto? Player { get; set; }
-        public CardViewDto? WinningCard { get; set; }
-        public int Round { get; set; }
-    }
-
-    private sealed class GameWinnersPayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public List<PlayerDto> Winners { get; set; } = new();
-    }
-
-    private sealed class PlayerTimedOutPayload
-    {
-        public GameStateDto GameState { get; set; } = new();
-        public PlayerDto Player { get; set; } = new();
-    }
 
     private sealed class ShowMessagePayload { public string Message { get; set; } = ""; }
 
@@ -180,9 +104,7 @@ internal static class Program
     {
         var p = payload!.Value.Deserialize<RequestBidPayload>(Json)!;
 
-        PlayerDto player = p.GameState.Players.FirstOrDefault(p => p.Name == Name);
-
-        List<Card> playerHand = DtoMapper.CardsFromDtos(player.Hand);
+        List<Card> playerHand = DtoMapper.CardsFromDtos(p.Hand);
 
         Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Your cards:");
         Card.PrintListFancy(playerHand);
@@ -202,8 +124,26 @@ internal static class Program
     private static Task<object?> Handle_AnnounceBidAsync(JsonElement? payload)
     {
         var p = payload!.Value.Deserialize<AnnounceBidPayload>(Json)!;
+        var round = p.GameState.CurrentRound;
 
-        Logger.Instance.WriteToConsoleAndLog($"{p.Player.Name} bids {p.Bid}");
+        Logger.Instance.WriteToConsoleAndLog("== Current Bids ==");
+
+        foreach (var pl in p.GameState.Players)
+        {
+            // Find this player's bid for the current round, if any
+            var bidDto = pl.Bids.FirstOrDefault(b => b.Round == round);
+
+            if (bidDto is not null)
+            {
+                // Highlight the player who just announced (optional)
+                var marker = (pl.Id == p.Player.Id) ? "*" : " ";
+                Logger.Instance.WriteToConsoleAndLog($"{marker} {pl.Name} bids {bidDto.PredictedWins}");
+            }
+            else
+            {
+                Logger.Instance.WriteToConsoleAndLog($"  {pl.Name} has not bid yet");
+            }
+        }
 
         return Task.FromResult<object?>(null);
     }
@@ -271,8 +211,10 @@ internal static class Program
 
     private static Task<object?> Handle_NotifyCardPlayedAsync(JsonElement? payload)
     {
-        //var p = payload!.Value.Deserialize<NotifyCardPlayedPayload>(Json)!;
-        //Console.WriteLine($"{p.Player.Name} played {p.Card.Display}");
+        var p = payload!.Value.Deserialize<NotifyCardPlayedPayload>(Json)!;
+
+        Logger.Instance.WriteToConsoleAndLog($"{p.Player.Name} played {p.Card.Display}");
+
         return Task.FromResult<object?>(null);
     }
 
