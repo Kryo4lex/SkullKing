@@ -11,6 +11,8 @@ namespace SkullKingCore.Controller
     public class ConsoleHumanController : IGameController
     {
 
+        private const string WaitingForOtherPlayer = "Waiting for other players...";
+
         public string Name { get; set; } = "NET Player";
 
         public Task<string> RequestName(GameState gameState, TimeSpan maxWait)
@@ -20,6 +22,8 @@ namespace SkullKingCore.Controller
             string? name = Console.ReadLine();
 
             Name = name ?? string.Empty;
+
+            Logger.Instance.WriteToConsoleAndLog(WaitingForOtherPlayer);
 
             return Task.FromResult(Name);
         }
@@ -34,7 +38,7 @@ namespace SkullKingCore.Controller
 
             foreach (Player player in gameState.Players)
             {
-                Logger.Instance.WriteToConsoleAndLog($"{player.Name}");
+                Logger.Instance.WriteToConsoleAndLog($"o {player.Name}");
             }
 
             Logger.Instance.WriteToConsoleAndLog($"");
@@ -74,6 +78,8 @@ namespace SkullKingCore.Controller
             int bid = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter your number of wins prediction:", 0, roundNumber);
 
             Logger.Instance.WriteToConsoleAndLog($"");
+            Logger.Instance.WriteToConsoleAndLog(WaitingForOtherPlayer);
+            Logger.Instance.WriteToConsoleAndLog($"");
 
             return Task.FromResult(bid);
 
@@ -95,6 +101,8 @@ namespace SkullKingCore.Controller
             Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Press Enter to confirm, that you have acknowledged the Bids.");
 
             Console.ReadLine();
+
+            Logger.Instance.WriteToConsoleAndLog(WaitingForOtherPlayer);
 
             return Task.CompletedTask;
         }

@@ -16,16 +16,16 @@ public static class MainClientConsole
             string host = "127.0.0.1";
             int port = 1234;
             */
-            
-            Console.WriteLine("Enter IP/Host:");
+
+            Logger.Instance.WriteToConsoleAndLog("Enter IP/Host:");
             string host = Console.ReadLine()!;
             int port = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter Port", 0, 65535);
-            
-            Console.WriteLine($"Connecting to {host}:{port} ...");
+
+            Logger.Instance.WriteToConsoleAndLog($"Connecting to {host}:{port} ...");
 
             await using var conn = await RpcConnection.ConnectAsync(host, port, CancellationToken.None);
 
-            Console.WriteLine("Connected. Waiting for game requests...\n");
+            Logger.Instance.WriteToConsoleAndLog("Connected. Waiting for game requests...\n");
 
             var controller = new ConsoleHumanController();
             var dispatcher = new RpcTcpDispatcher<ConsoleHumanController>(controller);

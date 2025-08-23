@@ -1,4 +1,5 @@
-﻿using SkullKingCore.Core.Cards.Base;
+﻿using SkullKing.Network.Server;
+using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Extensions;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Extensions;
@@ -20,15 +21,7 @@ namespace SkullKingCore.Core.Game
 
         public async Task RunGameAsync()
         {
-
-            for (int i = 0; i < _state.Players.Count; i++)
-            {
-                var player = _state.Players[i];
-                var controller = _controllers[player.Id];
-
-                string playerName = await controller.RequestName(_state, Timeout.InfiniteTimeSpan);
-                player.Name = playerName;
-            }
+            await CollectNamesAsync();
 
             await SendToAllControllersAsync(c => c.NotifyGameStartedAsync(_state));
 
@@ -62,6 +55,45 @@ namespace SkullKingCore.Core.Game
             await EndGameAsync();
         }
 
+        /// <summary>
+        /// Always ask all players for their display name concurrently; assign & broadcast.
+        /// </summary>
+        private async Task CollectNamesAsync()
+        {
+            // (Optional) purely visual signal – must NOT open an input dialog on clients.
+            // await BroadcastInParallelAsync(c => c.NotifyNameCollectionStartedAsync(_state));
+
+            // 1) Ask EVERY player at once (no blocking between players)
+            var answers = await CollectFromAllPlayersAsync<string>(
+                (player, controller) => controller.RequestName(_state, Timeout.InfiniteTimeSpan)
+            ).ConfigureAwait(false);
+
+            // 2) Sanitize + ensure uniqueness (case-insensitive), preserving starting order
+            var seen = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (player, raw) in answers)
+            {
+                var seat = _state.Players.IndexOf(player) + 1;
+                var name = (raw ?? string.Empty).Trim();
+                if (name.Length == 0) name = $"Player {seat}";
+
+                if (seen.TryGetValue(name, out var count))
+                {
+                    count++;
+                    seen[name] = count;
+                    name = $"{name} ({count})";
+                    // mark the new variant as used too
+                    seen[name] = 1;
+                }
+                else
+                {
+                    seen[name] = 1;
+                }
+
+                player.Name = name;
+            }
+
+        }
+
         private async Task StartRoundAsync()
         {
             // Reset sub-round counter at the start of each round
@@ -86,31 +118,29 @@ namespace SkullKingCore.Core.Game
         /// </summary>
         private async Task CollectBidsAsync()
         {
+            await BroadcastInParallelAsync(c => c.NotifyBidCollectionStartedAsync(_state));
 
-            await SendToAllControllersAsync(c => c.NotifyBidCollectionStartedAsync(_state));
+            var round = _state.CurrentRound;
+            var roundKey = new Player.Round(round);
 
-            int playerCount = _state.Players.Count;
+            var bids = await CollectFromAllPlayersAsync<int>(
+                (player, controller) => controller.RequestBidAsync(_state, round, Timeout.InfiniteTimeSpan)
+            ).ConfigureAwait(false);
 
-            for (int i = 0; i < playerCount; i++)
+            foreach (var (player, bid) in bids)
+                player.Bids[roundKey] = new Player.PredictedWins(bid);
+
+            for (int i = 0; i < _state.Players.Count; i++)
             {
-                int playerIndex = (_state.StartingPlayerIndex + i) % playerCount;
-                var player = _state.Players[playerIndex];
-                var controller = _controllers[player.Id];
-
-                int bid = await controller.RequestBidAsync(_state, _state.CurrentRound, Timeout.InfiniteTimeSpan);
-                player.Bids[new Player.Round(_state.CurrentRound)] = new Player.PredictedWins(bid); // store bid per round
-            }
-
-            for (int i = 0; i < playerCount; i++)
-            {
-                int playerIndex = (_state.StartingPlayerIndex + i) % playerCount;
+                int playerIndex = (_state.StartingPlayerIndex + i) % _state.Players.Count;
                 var player = _state.Players[playerIndex];
                 var controller = _controllers[player.Id];
 
                 await controller.AnnounceBidAsync(_state, player, player.Bids[new Player.Round(_state.CurrentRound)].Value, Timeout.InfiniteTimeSpan);
             }
 
-            await SendToAllControllersAsync(c => c.WaitForBidsReceivedAsync(_state));
+            // And your “wait for bids received” broadcast:
+            await BroadcastInParallelAsync(c => c.WaitForBidsReceivedAsync(_state));
         }
 
         private async Task PlaySubRoundAsync()
@@ -177,13 +207,70 @@ namespace SkullKingCore.Core.Game
 
         }
 
-        public async Task SendToAllControllersAsync(Func<IGameController, Task> action)
+        public Task SendToAllControllersAsync(Func<IGameController, Task> action)
         {
+            var tasks = new List<Task>(_controllers.Count);
             foreach (var controller in _controllers.Values)
+                tasks.Add(SafeInvokeAsync(action, controller));   // fire all calls immediately
+            return Task.WhenAll(tasks);                            // await all in parallel
+        }
+
+        private static async Task SafeInvokeAsync(
+            Func<IGameController, Task> action,
+            IGameController controller)
+        {
+            try
             {
-                await action(controller);
+                await action(controller).ConfigureAwait(false);
+            }
+            catch
+            {
+                
             }
         }
+
+        // Inside GameHandler
+        private IEnumerable<Player> PlayersInStartOrder()
+        {
+            int n = _state.Players.Count;
+            for (int i = 0; i < n; i++)
+                yield return _state.Players[(_state.StartingPlayerIndex + i) % n];
+        }
+
+        private async Task<(Player player, TResult result)[]> CollectFromAllPlayersAsync<TResult>(
+            Func<Player, IGameController, Task<TResult>> request)
+        {
+            // If you used this earlier, keep it; otherwise iterate directly
+            var players = PlayersInStartOrder().ToArray();
+
+            var tasks = new Task<TResult>[players.Length];
+            for (int i = 0; i < players.Length; i++)
+            {
+                var p = players[i];
+                var c = _controllers[p.Id]; // IGameController
+                tasks[i] = request(p, c);
+            }
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+
+            var results = new (Player, TResult)[players.Length];
+            for (int i = 0; i < players.Length; i++)
+                results[i] = (players[i], tasks[i].Result);
+
+            return results;
+        }
+
+        /// <summary>
+        /// Broadcast a no-result RPC to all controllers concurrently.
+        /// </summary>
+        private Task BroadcastInParallelAsync(Func<IGameController, Task> action)
+        {
+            var tasks = new List<Task>(_controllers.Count);
+            foreach (var ctrl in _controllers.Values)
+                tasks.Add(action(ctrl));
+            return Task.WhenAll(tasks);
+        }
+
 
     }
 

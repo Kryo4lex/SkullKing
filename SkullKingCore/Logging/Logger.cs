@@ -62,6 +62,11 @@ namespace SkullKingCore.Logging
             }
         }
 
+        public void WriteToConsoleAndLog(bool force = false)
+        {
+            WriteToConsoleAndLog("", force);
+        }
+
         public void WriteToConsoleAndLog(string message, bool force = false)
         {
             Console.WriteLine(message);

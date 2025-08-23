@@ -4,6 +4,9 @@ using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Logging;
 using SkullKingCore.Utility.UserInput;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 public class MainServerConsole
 {
@@ -32,7 +35,7 @@ public class MainServerConsole
             int totalPlayers = numLocalHumans + numCpus + numNets;
             if (totalPlayers < 2)
             {
-                Console.WriteLine("You need at least 2 players total. Press Enter to exit.");
+                Logger.Instance.WriteToConsoleAndLog("You need at least 2 players total. Press Enter to exit.");
                 Console.ReadLine();
                 return;
             }
@@ -77,31 +80,31 @@ public class MainServerConsole
                 controllers[player.Id] = controller;
             }
 
-            Console.WriteLine();
-            Console.WriteLine("=== Server Ready ===");
-            Console.WriteLine($"Start Round : {startRound}");
-            Console.WriteLine($"Max Rounds  : {maxRounds}");
-            Console.WriteLine("Players:");
+            Logger.Instance.WriteToConsoleAndLog("");
+            Logger.Instance.WriteToConsoleAndLog("=== Server Ready ===");
+            Logger.Instance.WriteToConsoleAndLog($"Start Round : {startRound}");
+            Logger.Instance.WriteToConsoleAndLog($"Max Rounds  : {maxRounds}");
+            Logger.Instance.WriteToConsoleAndLog("Players:");
             foreach (var p in players)
-                Console.WriteLine($" - {p.Name} (Id: {p.Id})");
+                Logger.Instance.WriteToConsoleAndLog($" - {p.Name} (Id: {p.Id})");
 
             if (numNets > 0)
             {
-                Console.WriteLine();
-                Console.WriteLine("Network player listeners:");
+                Logger.Instance.WriteToConsoleAndLog("");
+                Logger.Instance.WriteToConsoleAndLog("Network player listeners:");
                 for (int i = 1; i <= numNets; i++)
                 {
                     int port = basePort + (i - 1);
-                    Console.WriteLine($"  NET{i}: 0.0.0.0:{port}  (client connects with: host {GetLocalIpHint()} port {port})");
+                    Logger.Instance.WriteToConsoleAndLog($"  NET{i}: 0.0.0.0:{port}  (client connects with: host {GetLocalIpHint()} port {port})");
                 }
-                Console.WriteLine();
-                Console.WriteLine("Start your network clients now, then press Enter to begin the game...");
+                Logger.Instance.WriteToConsoleAndLog("");
+                Logger.Instance.WriteToConsoleAndLog("Start your network clients now, then press Enter to begin the game...");
                 //Console.ReadLine();
             }
             else
             {
-                Console.WriteLine();
-                Console.WriteLine("Press Enter to start the game...");
+                Logger.Instance.WriteToConsoleAndLog("");
+                Logger.Instance.WriteToConsoleAndLog("Press Enter to start the game...");
                 Console.ReadLine();
             }
 
@@ -110,25 +113,25 @@ public class MainServerConsole
             {
                 e.Cancel = true;
                 cts.Cancel();
-                Console.WriteLine("Cancellation requested… will stop after current step.");
+                Logger.Instance.WriteToConsoleAndLog("Cancellation requested... will stop after current step.");
             };
 
             try
             {
                 var handler = new GameHandler(players, startRound, maxRounds, controllers);
                 await handler.RunGameAsync();
-                Console.WriteLine();
-                Console.WriteLine("Game finished. Press Enter to exit.");
+                Logger.Instance.WriteToConsoleAndLog();
+                Logger.Instance.WriteToConsoleAndLog("Game finished. Press Enter to exit.");
                 Console.ReadLine();
             }
             catch (OperationCanceledException)
             {
-                Console.WriteLine("Server canceled.");
+                Logger.Instance.WriteToConsoleAndLog("Server canceled.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Fatal error:");
-                Console.WriteLine(ex);
+                Logger.Instance.WriteToConsoleAndLog("Fatal error:");
+                Logger.Instance.WriteToConsoleAndLog(ex.ToString());
             }
             finally
             {
@@ -144,16 +147,53 @@ public class MainServerConsole
             Console.ReadLine();
         }
     }
-
     private static string GetLocalIpHint()
     {
         try
         {
-            // Quick hint for LAN users; not critical if it fails.
-            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
-            var ip = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            return ip?.ToString() ?? "127.0.0.1";
+            // Prefer real NICs that are up; grab their IPv4s
+            var ipv4s = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(n => n.OperationalStatus == OperationalStatus.Up
+                            && n.NetworkInterfaceType != NetworkInterfaceType.Loopback
+                            && n.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+                .Select(u => u.Address)
+                .Where(a => a.AddressFamily == AddressFamily.InterNetwork
+                            && !IPAddress.IsLoopback(a)
+                            && !a.ToString().StartsWith("169.254.")) // skip APIPA
+                .Select(a => a.ToString())
+                .ToArray();
+
+            // 1) Prefer 192.*; 2) any IPv4
+            var ip = ipv4s.FirstOrDefault(x => x.StartsWith("192."))
+                     ?? ipv4s.FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(ip))
+                return ip;
+
+            // 3) Fallback to hostname (prefer FQDN if resolvable)
+            var host = Dns.GetHostName();
+            if (!string.IsNullOrWhiteSpace(host))
+            {
+                try
+                {
+                    var he = Dns.GetHostEntry(host);
+                    if (!string.IsNullOrWhiteSpace(he.HostName))
+                        return he.HostName; // often FQDN
+                }
+                catch
+                {
+                    // ignore and return short host below
+                }
+                return host; // short computer name
+            }
         }
-        catch { return "127.0.0.1"; }
+        catch
+        {
+            // ignore and fall through
+        }
+
+        // 4) Last resort
+        return "127.0.0.1";
     }
+
 }
