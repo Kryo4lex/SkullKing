@@ -1,4 +1,6 @@
-﻿namespace SkullKingCore.Logging
+﻿using System.Reflection;
+
+namespace SkullKingCore.Logging
 {
     public sealed class Logger
     {
@@ -20,7 +22,20 @@
         // Private constructor to prevent direct instantiation.
         private Logger()
         {
-            _logFilePath = $"{nameof(SkullKingCore)}_log.txt";
+            var entryAssembly = Assembly.GetEntryAssembly();
+
+            string assemblyNameToUse;
+
+            if (entryAssembly != null)
+            {
+                assemblyNameToUse = entryAssembly.GetName().Name!;
+            }
+            else
+            {
+                assemblyNameToUse = $"{nameof(SkullKing)}";
+            }
+
+            _logFilePath = $"{assemblyNameToUse}_log.txt";
         }
 
         // Initialize with custom log file path.

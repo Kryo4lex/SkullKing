@@ -12,22 +12,22 @@ public class MainServerConsole
         try
         { 
             Console.Title = "Skull King Server";
-        
+        /*
             int basePort = 1234;
             int numLocalHumans = 0;
             int numCpus = 3;
             int numNets = 1;
             int startRound = 5;
             int maxRounds = 10;
-        
-            /*
+            */
+            
             int basePort = UserInput.ReadIntUntilValid($"Enter Port", 0, 65535);
             int numLocalHumans = UserInput.ReadIntUntilValid($"Enter Number of Local Human Players", 0, 8);
             int numCpus = UserInput.ReadIntUntilValid($"Enter Number of Local CPU Players", 0, 8);
             int numNets = UserInput.ReadIntUntilValid($"Enter Number of NET Players", 0, 8);
             int startRound = UserInput.ReadIntUntilValid($"Enter starting round", 1, 10);
             int maxRounds = UserInput.ReadIntUntilValid($"Enter maximum round", 1, 10);
-            */
+            
 
             int totalPlayers = numLocalHumans + numCpus + numNets;
             if (totalPlayers < 2)
@@ -48,7 +48,7 @@ public class MainServerConsole
                 var player = new Player(name, name);
                 players.Add(player);
 
-                var controller = new LocalConsoleHumanController(name);
+                var controller = new LocalConsoleHumanController();
                 controllers[player.Id] = controller;
             }
 

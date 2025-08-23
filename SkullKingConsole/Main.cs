@@ -79,7 +79,7 @@ namespace SkullKingConsole
                 controllers[player.Id] = new LocalConsoleCPUController(player.Name);
             }
 
-            controllers[humanPlayer.Id] = new LocalConsoleHumanController(humanPlayer.Name);
+            controllers[humanPlayer.Id] = new LocalConsoleHumanController();
 
             // 3. Create the game state with, e.g., 5 rounds
             var match = new GameHandler(players, startRound: 5, maxRounds: 5, controllers);

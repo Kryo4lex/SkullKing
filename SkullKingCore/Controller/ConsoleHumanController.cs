@@ -30,12 +30,14 @@ namespace SkullKingCore.Controller
 
             Logger.Instance.WriteToConsoleAndLog($"--- Game started ---");
 
-            Logger.Instance.WriteToConsoleAndLog($"Players in this Game:");
+            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Players in this Game:");
 
             foreach (Player player in gameState.Players)
             {
                 Logger.Instance.WriteToConsoleAndLog($"{player.Name}");
             }
+
+            Logger.Instance.WriteToConsoleAndLog($"");
 
             return Task.CompletedTask;
         }
@@ -69,12 +71,7 @@ namespace SkullKingCore.Controller
                 Logger.Instance.WriteToConsoleAndLog($"Player with name '{Name}' not found.");
             }
 
-            int bid = 0;
-
-            while (!UserInput.TryReadInt($"{Environment.NewLine}Enter your number of wins prediction:", out bid, 0, roundNumber))
-            {
-
-            }
+            int bid = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter your number of wins prediction:", 0, roundNumber);
 
             Logger.Instance.WriteToConsoleAndLog($"");
 
@@ -114,16 +111,13 @@ namespace SkullKingCore.Controller
         public Task<Card> RequestCardPlayAsync(GameState gameState, List<Card> hand, TimeSpan maxWait)
         {
 
-            int cardToPlayIndex = 0;
+            int cardToPlayIndex;
 
             Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Cards you can play:");
 
             Card.PrintListFancy(hand);
 
-            while (!UserInput.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to play:", out cardToPlayIndex, 0, hand.Count - 1))
-            {
-
-            }
+            cardToPlayIndex = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter the index of the card you want to play:", 0, hand.Count - 1);
 
             Card card = hand[cardToPlayIndex];
 
@@ -153,6 +147,8 @@ namespace SkullKingCore.Controller
 
             //Logger.Instance.WriteToConsoleAndLog($"{Name} plays {card}");
 
+            Logger.Instance.WriteToConsoleAndLog($"");
+
             return Task.FromResult(card);
 
         }
@@ -178,7 +174,7 @@ namespace SkullKingCore.Controller
         public Task NotifyAboutSubRoundEndAsync(GameState gameState)
         {
             //no need to tell console CPU what is happening
-            Logger.Instance.WriteToConsoleAndLog($"--- Sub round {gameState.CurrentSubRound}/{gameState.CurrentRound} ended ---");
+            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}--- Sub round {gameState.CurrentSubRound}/{gameState.CurrentRound} ended ---");
             Logger.Instance.WriteToConsoleAndLog($"Press Enter Key to continue");
             Console.ReadLine();
 
@@ -190,11 +186,11 @@ namespace SkullKingCore.Controller
 
             if (player == null)
             {
-                Logger.Instance.WriteToConsoleAndLog($"None!");
+                Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}None!");
             }
             else
             {
-                Logger.Instance.WriteToConsoleAndLog($"{player.Name} won round {round} with {winningCard}");
+                Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}{player.Name} won round {round} with {winningCard}");
             }
 
             return Task.CompletedTask;

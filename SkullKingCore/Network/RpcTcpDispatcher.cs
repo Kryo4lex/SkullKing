@@ -1,6 +1,7 @@
 ﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
+using System.Text.Json;
 
 namespace SkullKingCore.Network
 {
@@ -68,9 +69,72 @@ namespace SkullKingCore.Network
                 _ => throw new InvalidOperationException($"Unknown method: {method}")
             };
 
-        // helpers (same as you have)
-        private static T Arg<T>(object?[] a, int i) =>
-            a.Length > i && a[i] is T t ? t : throw new ArgumentException($"Argument {i} must be {typeof(T).Name}.");
+        private static readonly JsonSerializerOptions s_jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            // IncludeFields = true, // uncomment if you rely on public fields in DTOs
+        };
+
+        private static T Arg<T>(object?[] a, int i)
+        {
+            if (a is null) throw new ArgumentNullException(nameof(a));
+            if (i < 0 || i >= a.Length) throw new ArgumentOutOfRangeException(nameof(i));
+
+            var v = a[i];
+
+            // If T is reference/nullable, allow null
+            if (v is null)
+            {
+                if (default(T) is null) return default!;
+                throw new ArgumentException($"Argument {i} must be {typeof(T).Name}, but was null.");
+            }
+
+            // Fast path
+            if (v is T t) return t;
+
+            // Most common: args were deserialized as JsonElement
+            if (v is JsonElement je)
+            {
+                if (je.ValueKind == JsonValueKind.Null)
+                {
+                    if (default(T) is null) return default!;
+                    throw new ArgumentException(
+                        $"Argument {i} was JSON null but {typeof(T).Name} is not nullable.");
+                }
+
+                try
+                {
+                    var value = je.Deserialize<T>(s_jsonOptions);
+                    if (value is not null) return value;
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException(
+                        $"Argument {i} could not be deserialized to {typeof(T).Name} (JsonElement {je.ValueKind}).",
+                        ex);
+                }
+            }
+
+            // Sometimes object graphs arrive as IDictionary
+            if (v is System.Collections.IDictionary dict)
+            {
+                var json = JsonSerializer.Serialize(dict, s_jsonOptions);
+                try
+                {
+                    var value = JsonSerializer.Deserialize<T>(json, s_jsonOptions);
+                    if (value is not null) return value;
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException(
+                        $"Argument {i} could not be deserialized to {typeof(T).Name} from IDictionary.",
+                        ex);
+                }
+            }
+
+            throw new ArgumentException(
+                $"Argument {i} must be {typeof(T).Name}, but was {v.GetType().FullName}.");
+        }
 
         private static Task<object?> Invoke(Func<Task> f) =>
             f().ContinueWith<object?>(_ => null);

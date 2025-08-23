@@ -55,7 +55,8 @@ namespace SkullKing.Network.Server
         // IGameController proxy methods
 
         public async Task<string> RequestName(GameState gameState, TimeSpan maxWait)
-            => await CallAsync<string>(nameof(RequestName), gameState, maxWait)!.ConfigureAwait(false);
+            => await CallAsync<string?>(nameof(RequestName), gameState, maxWait).ConfigureAwait(false)
+               ?? throw new InvalidOperationException("RequestName returned null.");
 
         public Task NotifyRoundStartedAsync(GameState gameState)
             => CallAsync<object?>(nameof(NotifyRoundStartedAsync), gameState)!;
@@ -76,7 +77,9 @@ namespace SkullKing.Network.Server
             => CallAsync<object?>(nameof(NotifyNotAllCardsInHandCanBePlayed), gameState, allowed, notAllowed)!;
 
         public async Task<Card> RequestCardPlayAsync(GameState gameState, List<Card> hand, TimeSpan maxWait)
-            => await CallAsync<Card>(nameof(RequestCardPlayAsync), gameState, hand, maxWait).ConfigureAwait(false);
+            => await CallAsync<Card?>(nameof(RequestCardPlayAsync), gameState, hand, maxWait)
+                   .ConfigureAwait(false)
+               ?? throw new InvalidOperationException("RequestCardPlayAsync returned null.");
 
         public Task NotifyCardPlayedAsync(Player player, Card playedCard)
             => CallAsync<object?>(nameof(NotifyCardPlayedAsync), player, playedCard)!;
