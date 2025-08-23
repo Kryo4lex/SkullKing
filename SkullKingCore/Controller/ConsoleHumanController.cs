@@ -179,7 +179,7 @@ namespace SkullKingCore.Controller
         {
             //no need to tell console CPU what is happening
             Logger.Instance.WriteToConsoleAndLog($"--- Sub round {gameState.CurrentSubRound}/{gameState.CurrentRound} ended ---");
-            Logger.Instance.WriteToConsoleAndLog($"Press Any Key to continue");
+            Logger.Instance.WriteToConsoleAndLog($"Press Enter Key to continue");
             Console.ReadLine();
 
             return Task.CompletedTask;

@@ -5,12 +5,22 @@ namespace SkullKingCore.Utility.UserInput
     public static class UserInput
     {
 
+        public static int ReadIntUntilValid(string prompt, int min, int max)
+        {
+            int value;
+            while (!TryReadInt(prompt, out value, min, max))
+            {
+                // just loop until TryReadInt returns true
+            }
+            return value;
+        }
+
         public static bool TryReadInt(string prompt, out int result, int lowerLimit = int.MinValue, int upperLimit = int.MaxValue)
         {
             while (true)
             {
                 //Logger.Instance.WriteToConsoleAndLog($"{prompt} (or 'E' to cancel): ");
-                Logger.Instance.WriteToConsoleAndLog($"{prompt}");
+                Logger.Instance.WriteToConsoleAndLog($"{prompt} [range: {lowerLimit} - {upperLimit}]:");
 
                 string? input = Console.ReadLine();
 

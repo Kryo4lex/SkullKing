@@ -11,20 +11,15 @@ public static class MainClientConsole
     {
         Console.Title = "Skull King Console Network Client Human";
 
-        string host;
-        int port;
-
-        //Console.WriteLine("Enter IP/Host:");
-        host = "127.0.0.1";
-        //host = Console.ReadLine()!;
-
-        port = 1234;
         /*
-        while (!UserInput.TryReadInt($"{Environment.NewLine}Enter Port:", out port, 0, 65535))
-        {
-
-        }
+        string host = "127.0.0.1"; ;
+        int port = 1234;
         */
+        
+        Console.WriteLine("Enter IP/Host:");
+        string host = Console.ReadLine()!;
+        int port = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter Port", 0, 65535);
+        
 
         Console.WriteLine($"Connecting to {host}:{port} ...");
 

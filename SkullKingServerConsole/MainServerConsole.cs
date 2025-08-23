@@ -2,21 +2,31 @@
 using SkullKingCore.Controller;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
+using SkullKingCore.Utility.UserInput;
 
 internal class MainServerConsole
 {
     private static async Task Main()
     {
         Console.Title = "Skull King Server";
+        /*
+        int basePort = 1234;
+        int numLocalHumans = 0;
+        int numCpus = 3;
+        int numNets = 1;
+        int startRound = 5;
+        int maxRounds = 10;
+        */
+        
+        int basePort = UserInput.ReadIntUntilValid($"Enter Port", 0, 65535);
+        int numLocalHumans = UserInput.ReadIntUntilValid($"Enter Number of Local Human Players", 0, 8);
+        int numCpus = UserInput.ReadIntUntilValid($"Enter Number of Local CPU Players", 0, 8);
+        int numNets = UserInput.ReadIntUntilValid($"Enter Number of NET Players", 0, 8);
+        int startRound = UserInput.ReadIntUntilValid($"Enter starting round", 1, 10);
+        int maxRounds = UserInput.ReadIntUntilValid($"Enter maximum round", 1, 10);
+        
 
-        int basePort = 1234;// PromptInt("Base TCP port for network players [5005]: ", 1, 65535, 5005);
-        int numHumans = 0;// PromptInt("Number of local human players [1]: ", 0, 8, 1);
-        int numCpus = 3;// PromptInt("Number of local CPU players   [0]: ", 0, 8, 0);
-        int numNets = 1;// PromptInt("Number of network players     [0]: ", 0, 8, 0);
-        int startRound = 5;// PromptInt("Starting round number         [1]: ", 1, 20, 1);
-        int maxRounds = 10;// PromptInt("Max rounds to play           [10]: ", 1, 20, 10);
-
-        int totalPlayers = numHumans + numCpus + numNets;
+        int totalPlayers = numLocalHumans + numCpus + numNets;
         if (totalPlayers < 2)
         {
             Console.WriteLine("You need at least 2 players total. Press Enter to exit.");
@@ -29,7 +39,7 @@ internal class MainServerConsole
         var hostedNetworkControllers = new List<NetworkHostedGameController>(numNets);
 
         // Build local human players
-        for (int i = 1; i <= numHumans; i++)
+        for (int i = 1; i <= numLocalHumans; i++)
         {
             string name = $"Human{i}";
             var player = new Player(name, name);

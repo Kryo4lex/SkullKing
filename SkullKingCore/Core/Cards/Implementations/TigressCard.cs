@@ -14,7 +14,7 @@ namespace SkullKingCore.Core.Cards.Implementations
 
         public TigressCard() : base(CardType.TIGRESS)
         {
-            PlayedAsType = CardType.PIRATE;
+            PlayedAsType = CardType.JOKER;
         }
 
         public override string SubType()
