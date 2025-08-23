@@ -1,6 +1,4 @@
-﻿// Program.cs — SkullKing.Server (console-prompt version)
-
-using SkullKing.Network.Server;      // NetworkHostedGameController
+﻿using SkullKing.Network.Server;
 using SkullKingCore.Controller;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
@@ -125,20 +123,6 @@ internal class MainServerConsole
             {
                 try { await net.DisposeAsync(); } catch { /* ignore */ }
             }
-        }
-    }
-
-    private static int PromptInt(string prompt, int min, int max, int @default)
-    {
-        while (true)
-        {
-            Console.Write(prompt);
-            var input = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(input))
-                return @default;
-            if (int.TryParse(input, out var v) && v >= min && v <= max)
-                return v;
-            Console.WriteLine($"Please enter an integer between {min} and {max}, or press Enter for {@default}.");
         }
     }
 

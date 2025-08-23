@@ -1,4 +1,5 @@
 ﻿using SkullKingCore.Core.Cards.Base;
+using SkullKingCore.Core.Cards.Extensions;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Extensions;
 using SkullKingCore.GameDefinitions;
@@ -20,10 +21,16 @@ namespace SkullKingCore.Core.Game
         public async Task RunGameAsync()
         {
 
-            foreach (var controller in _controllers.Values)
+            for (int i = 0; i < _state.Players.Count; i++)
             {
-                await controller.NotifyGameStartedAsync(_state);
+                var player = _state.Players[i];
+                var controller = _controllers[player.Id];
+
+                string playerName = await controller.RequestName(_state, Timeout.InfiniteTimeSpan);
+                player.Name = playerName;
             }
+
+            await SendToAllControllersAsync(c => c.NotifyGameStartedAsync(_state));
 
             //CurrentSubRound init = 1 required, CurrentRound can be different
 
@@ -36,19 +43,15 @@ namespace SkullKingCore.Core.Game
                 // Play sub-rounds for this round
                 while (_state.CurrentSubRound <= _state.CurrentRound)
                 {
-                    // Notify controllers about sub-round start
-                    foreach (var controller in _controllers.Values)
-                    {
-                        await controller.NotifyAboutSubRoundStartAsync(_state);
-                    }
 
+                    // Notify controllers about sub-round start
+                    await SendToAllControllersAsync(c => c.NotifyAboutSubRoundStartAsync(_state));
+
+                    // Play Sub Round
                     await PlaySubRoundAsync();
 
                     // Notify controllers about sub-round end
-                    foreach (var controller in _controllers.Values)
-                    {
-                        await controller.NotifyAboutSubRoundEndAsync(_state);
-                    }
+                    await SendToAllControllersAsync(c => c.NotifyAboutSubRoundEndAsync(_state));
 
                     _state.CurrentSubRound++; // increment sub-round
                 }
@@ -65,10 +68,7 @@ namespace SkullKingCore.Core.Game
             _state.CurrentSubRound = 1;
 
             // Announce the round to all controllers
-            foreach (var controller in _controllers.Values)
-            {
-                await controller.NotifyRoundStartedAsync(_state);
-            }
+            await SendToAllControllersAsync(c => c.NotifyRoundStartedAsync(_state));
 
             // Shuffle the game cards
             _state.ShuffledGameCards = _state.AllGameCards.ToList().Shuffle();
@@ -86,10 +86,8 @@ namespace SkullKingCore.Core.Game
         /// </summary>
         private async Task CollectBidsAsync()
         {
-            foreach (var controller in _controllers.Values)
-            {
-                await controller.NotifyBidCollectionStartedAsync(_state);
-            }
+
+            await SendToAllControllersAsync(c => c.NotifyBidCollectionStartedAsync(_state));
 
             int playerCount = _state.Players.Count;
 
@@ -112,10 +110,7 @@ namespace SkullKingCore.Core.Game
                 await controller.AnnounceBidAsync(_state, player, player.Bids[new Player.Round(_state.CurrentRound)].Value, Timeout.InfiniteTimeSpan);
             }
 
-            foreach (var controller in _controllers.Values)
-            {
-                await controller.WaitForBidsReceivedAsync(_state);
-            }
+            await SendToAllControllersAsync(c => c.WaitForBidsReceivedAsync(_state));
         }
 
         private async Task PlaySubRoundAsync()
@@ -140,13 +135,13 @@ namespace SkullKingCore.Core.Game
                     await controller.NotifyNotAllCardsInHandCanBePlayed(_state, cardsThatPlayerIsAllowedToPlay, cardsThatPlayerIsNotAllowedToPlay);
                 }
 
-                Card card = await controller.RequestCardPlayAsync(_state, cardsThatPlayerIsAllowedToPlay, Timeout.InfiniteTimeSpan);
+                Card playedCard = await controller.RequestCardPlayAsync(_state, cardsThatPlayerIsAllowedToPlay, Timeout.InfiniteTimeSpan);
 
-                await controller.NotifyCardPlayedAsync(player, card);
+                player.Hand.RemoveByGuid(playedCard.GuId);
 
-                player.Hand.Remove(card);
+                cardsInPlay.Add(playedCard);
 
-                cardsInPlay.Add(card);
+                await SendToAllControllersAsync(c => c.NotifyCardPlayedAsync(player, playedCard));
             }
 
             int? winnerIndex = TrickResolver.DetermineTrickWinnerIndex(cardsInPlay);
@@ -168,26 +163,28 @@ namespace SkullKingCore.Core.Game
             // Set the next starting player only if we have a winner
             _state.StartingPlayerIndex = newStartingPlayerIndex;
 
-            foreach (var controller in _controllers.Values)
-            {
-                await controller.NotifyAboutSubRoundWinnerAsync(winner, winningCard, _state.CurrentRound);
-            }
+            await SendToAllControllersAsync(c => c.NotifyAboutSubRoundWinnerAsync(winner, winningCard, _state.CurrentRound));
+
         }
 
         private async Task EndGameAsync()
         {
             // ToDo: Get the winner depending on the score
 
-            foreach (var controller in _controllers.Values)
-            {
-                await controller.NotifyGameEndedAsync(_state);
-            }
+            await SendToAllControllersAsync(c => c.NotifyGameEndedAsync(_state));
 
+            await SendToAllControllersAsync(c => c.NotifyAboutGameWinnerAsync(_state, _state.Players.ToList()));
+
+        }
+
+        public async Task SendToAllControllersAsync(Func<IGameController, Task> action)
+        {
             foreach (var controller in _controllers.Values)
             {
-                await controller.NotifyAboutGameWinnerAsync(_state, _state.Players.ToList());
+                await action(controller);
             }
         }
+
     }
 
 }

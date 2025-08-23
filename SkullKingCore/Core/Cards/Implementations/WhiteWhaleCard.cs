@@ -1,7 +1,9 @@
 ﻿using SkullKingCore.Core.Cards.Base;
+using System.Runtime.Serialization;
 
 namespace SkullKingCore.Core.Cards.Implementations
 {
+    [DataContract]
     public class WhiteWhaleCard : Card
     {
         public WhiteWhaleCard() : base(GameDefinitions.CardType.WHITE_WHALE)

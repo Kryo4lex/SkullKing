@@ -1,9 +1,6 @@
 ﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.GameDefinitions;
-using System;
-using static SkullKingCore.Core.Game.Player;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SkullKingCore.Core
 {

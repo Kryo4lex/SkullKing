@@ -20,6 +20,11 @@ namespace SkullKingCore.Controller
             Name = name;
         }
 
+        public Task<string> RequestName(GameState gameState, TimeSpan maxWait)
+        {
+            return Task.FromResult(Name);
+        }
+
         public Task NotifyGameStartedAsync(GameState gameState)
         {
 
@@ -45,7 +50,7 @@ namespace SkullKingCore.Controller
 
             }
 
-            Logger.Instance.WriteToConsoleAndLog($"{Name} plays {card}");
+            //Logger.Instance.WriteToConsoleAndLog($"{Name} plays {card}");
 
             return Task.FromResult(card);
 
@@ -54,7 +59,7 @@ namespace SkullKingCore.Controller
         public Task ShowMessageAsync(string message)
         {
 
-            Logger.Instance.WriteToConsoleAndLog($"{Name} {message}");
+            //Logger.Instance.WriteToConsoleAndLog($"{Name} {message}");
 
             return Task.CompletedTask;
 
@@ -71,7 +76,7 @@ namespace SkullKingCore.Controller
 
         public Task AnnounceBidAsync(GameState gameState, Player player, int bid, TimeSpan maxWait)
         {
-            Logger.Instance.WriteToConsoleAndLog($"{player.Name} bids {bid}");
+            //Logger.Instance.WriteToConsoleAndLog($"{player.Name} bids {bid}");
 
             return Task.CompletedTask;
         }

@@ -8,18 +8,10 @@ using SkullKingCore.Utility.UserInput;
 
 namespace SkullKingCore.Controller
 {
-
-    public class LocalConsoleHumanController : IGameController
+    public class ConsoleHumanController : IGameController
     {
 
-        private readonly Random _random = new();
-
-        public string Name { get; set; }
-
-        public LocalConsoleHumanController(string name)
-        {
-            Name = name;
-        }
+        public string Name { get; set; } = "NET Player";
 
         public Task<string> RequestName(GameState gameState, TimeSpan maxWait)
         {
@@ -38,71 +30,28 @@ namespace SkullKingCore.Controller
 
             Logger.Instance.WriteToConsoleAndLog($"--- Game started ---");
 
-            return Task.CompletedTask;
-        }
+            Logger.Instance.WriteToConsoleAndLog($"Players in this Game:");
 
-        public Task<Card> RequestCardPlayAsync(GameState gameState, List<Card> hand, TimeSpan maxWait)
-        {
-
-            int cardToPlayIndex = 0;
-
-            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Cards you can play:");
-
-            Card.PrintListFancy(hand);
-
-            while(!UserInput.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to play:", out cardToPlayIndex, 0, hand.Count - 1))
+            foreach (Player player in gameState.Players)
             {
-
+                Logger.Instance.WriteToConsoleAndLog($"{player.Name}");
             }
 
-            Card card = hand[cardToPlayIndex];
-
-            //Special Case
-            if (card.CardType == CardType.TIGRESS)
-            {
-
-                string? choice;
-                do
-                {
-                    Logger.Instance.WriteToConsoleAndLog("Enter E (Escape) or P (Pirate) and confirm: ");
-                    choice = Console.ReadLine()?.Trim().ToUpperInvariant();
-                }
-                while (choice != "E" && choice != "P");
-
-                switch(choice)
-                {
-                    case "E":
-                        ((TigressCard)card).PlayedAsType = CardType.ESCAPE;
-                        break;
-                    case "P":
-                        ((TigressCard)card).PlayedAsType = CardType.PIRATE;
-                        break;
-                }
-
-            }
-
-            //Logger.Instance.WriteToConsoleAndLog($"{Name} plays {card}");
-
-            return Task.FromResult(card);
-
+            return Task.CompletedTask;
         }
 
-        public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> cardsThatPlayerIsAllowedToPlay, List<Card> cardsThatPlayerIsNotAllowedToPlay)
+        public Task NotifyRoundStartedAsync(GameState gameState)
         {
-            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Not all Cards in your hand can be played due to lead color/suit rule. Cards you are not allowed to play:");
-
-            Card.PrintListFancy(cardsThatPlayerIsNotAllowedToPlay);
+            Logger.Instance.WriteToConsoleAndLog($"--- Round {gameState.CurrentRound} ---");
 
             return Task.CompletedTask;
         }
 
-        public Task ShowMessageAsync(string message)
+        public Task NotifyBidCollectionStartedAsync(GameState gameState)
         {
-
-            Logger.Instance.WriteToConsoleAndLog($"{Name} {message}");
+            Logger.Instance.WriteToConsoleAndLog("Collecting bids...");
 
             return Task.CompletedTask;
-
         }
 
         public Task<int> RequestBidAsync(GameState gameState, int roundNumber, TimeSpan maxWait)
@@ -153,27 +102,67 @@ namespace SkullKingCore.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyCardPlayedAsync(Player player, Card playedCard)
+        public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> cardsThatPlayerIsAllowedToPlay, List<Card> cardsThatPlayerIsNotAllowedToPlay)
         {
-            
-            //string opponentPlayerName = gameState.Players.FirstOrDefault(x => x.Id == playerID).Name;
+            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Not all Cards in your hand can be played due to lead color/suit rule. Cards you are not allowed to play:");
 
-            Logger.Instance.WriteToConsoleAndLog($"{player.Name} played {playedCard}");
-            
+            Card.PrintListFancy(cardsThatPlayerIsNotAllowedToPlay);
+
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round)
+        public Task<Card> RequestCardPlayAsync(GameState gameState, List<Card> hand, TimeSpan maxWait)
         {
 
-            if(player == null)
+            int cardToPlayIndex = 0;
+
+            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Cards you can play:");
+
+            Card.PrintListFancy(hand);
+
+            while (!UserInput.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to play:", out cardToPlayIndex, 0, hand.Count - 1))
             {
-                Logger.Instance.WriteToConsoleAndLog($"None!");
+
             }
-            else
+
+            Card card = hand[cardToPlayIndex];
+
+            //Special Case
+            if (card.CardType == CardType.TIGRESS)
             {
-                Logger.Instance.WriteToConsoleAndLog($"{player.Name} won round {round} with {winningCard}");
+
+                string? choice;
+                do
+                {
+                    Logger.Instance.WriteToConsoleAndLog("Enter E (Escape) or P (Pirate) and confirm: ");
+                    choice = Console.ReadLine()?.Trim().ToUpperInvariant();
+                }
+                while (choice != "E" && choice != "P");
+
+                switch (choice)
+                {
+                    case "E":
+                        ((TigressCard)card).PlayedAsType = CardType.ESCAPE;
+                        break;
+                    case "P":
+                        ((TigressCard)card).PlayedAsType = CardType.PIRATE;
+                        break;
+                }
+
             }
+
+            //Logger.Instance.WriteToConsoleAndLog($"{Name} plays {card}");
+
+            return Task.FromResult(card);
+
+        }
+
+        public Task NotifyCardPlayedAsync(Player player, Card playedCard)
+        {
+
+            //string opponentPlayerName = gameState.Players.FirstOrDefault(x => x.Id == playerID).Name;
+
+            Logger.Instance.WriteToConsoleAndLog($"{player.Name} played {playedCard}");
 
             return Task.CompletedTask;
         }
@@ -196,16 +185,17 @@ namespace SkullKingCore.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyBidCollectionStartedAsync(GameState gameState)
+        public Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round)
         {
-            Logger.Instance.WriteToConsoleAndLog("Collecting bids...");
 
-            return Task.CompletedTask;
-        }
-
-        public Task NotifyRoundStartedAsync(GameState gameState)
-        {
-            Logger.Instance.WriteToConsoleAndLog($"--- Round {gameState.CurrentRound} ---");
+            if (player == null)
+            {
+                Logger.Instance.WriteToConsoleAndLog($"None!");
+            }
+            else
+            {
+                Logger.Instance.WriteToConsoleAndLog($"{player.Name} won round {round} with {winningCard}");
+            }
 
             return Task.CompletedTask;
         }
@@ -223,11 +213,21 @@ namespace SkullKingCore.Controller
             return Task.CompletedTask;
         }
 
+        public Task ShowMessageAsync(string message)
+        {
+
+            Logger.Instance.WriteToConsoleAndLog($"{Name} {message}");
+
+            return Task.CompletedTask;
+
+        }
+
         public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player)
         {
             Logger.Instance.WriteToConsoleAndLog($"{player.Name} timed out!");
 
             return Task.CompletedTask;
         }
+
     }
 }

@@ -1,9 +1,12 @@
 ﻿using SkullKingCore.Core.Cards.Interfaces;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
+using System.Runtime.Serialization;
 
 namespace SkullKingCore.Core.Cards.Base
 {
+
+    [DataContract]
     public abstract class Card : ICard
     {
 
@@ -19,15 +22,25 @@ namespace SkullKingCore.Core.Cards.Base
 
         //protected set, so that child classes can set
         //changed to regular set, so that it can be modified, e.g. for the Tigress
+        [DataMember(Order = 1)]
         public CardType CardType { get; set; }
+
+        [DataMember(Order = 2)]
+        public Guid GuId { get; private set; }
 
         //abstract to force child classes for their own implementation
         //virtual so that it can be overriden
         public virtual int? GenericValue => null;
 
-        public Card(CardType cardType)
+        protected Card(CardType type) : this()  // ensure GuId is set
         {
-            CardType = cardType;
+            CardType = type;
+        }
+
+        // Parameterless ctor for serializer (does not change runtime behavior)
+        protected Card()
+        {
+            GuId = Guid.NewGuid();
         }
 
         //This base class is abstract (childs must implement it) and subclasses must override ToString().

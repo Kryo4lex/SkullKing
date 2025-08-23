@@ -1,112 +1,85 @@
-﻿// SkullKing.Network/Rpc/RpcConnection.cs
-// Minimal JSON RPC connection for client side: reads RpcEnvelope<JsonElement>, writes RpcResponse<TResult>.
-
-#nullable enable
-
-using SkullKingCore.Network.Networking;
+﻿using SkullKing.Network.Networking;
 using System.Net.Sockets;
-using System.Text.Json;
 
-namespace SkullKingCore.Network.Rpc
+namespace SkullKing.Network.Rpc
 {
-
-    /// <summary>
-    /// Client-side RPC connection that handles a continuous request->response loop.
-    /// For each received envelope, it calls the provided handler and returns its result.
-    /// </summary>
     public sealed class RpcConnection : IAsyncDisposable
     {
         private readonly TcpClient _client;
         private readonly NetworkStream _stream;
         private readonly CancellationTokenSource _cts = new();
-        private readonly Func<string, JsonElement?, Task<object?>> _handler;
-        private readonly Task _loop;
 
-        private static readonly JsonSerializerOptions Json = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
-
-        private RpcConnection(TcpClient client, Func<string, JsonElement?, Task<object?>> handler)
+        private RpcConnection(TcpClient client)
         {
             _client = client;
             _stream = client.GetStream();
-            _handler = handler ?? throw new ArgumentNullException(nameof(handler));
-            _loop = Task.Run(LoopAsync);
         }
 
-        public static async Task<RpcConnection> ConnectAsync(
-            string host,
-            int port,
-            Func<string, JsonElement?, Task<object?>> handler,
-            CancellationToken ct)
+        public static async Task<RpcConnection> ConnectAsync(string host, int port, CancellationToken ct)
         {
-            var c = new TcpClient();
-            await c.ConnectAsync(host, port, ct).ConfigureAwait(false);
-            return new RpcConnection(c, handler);
+            var tcp = new TcpClient();
+            await tcp.ConnectAsync(host, port, ct).ConfigureAwait(false);
+            return new RpcConnection(tcp);
         }
 
-        private async Task LoopAsync()
+        public static Task<RpcConnection> FromAcceptedAsync(TcpClient accepted, CancellationToken ct)
+            => Task.FromResult(new RpcConnection(accepted));
+
+        public async Task<T?> InvokeAsync<T>(string method, params object?[] args)
+        {
+            var env = new RpcEnvelope { Method = method, Args = args ?? Array.Empty<object?>() };
+            await Framing.WriteFrameAsync(_stream, Wire.Serialize(env), _cts.Token).ConfigureAwait(false);
+
+            var respBytes = await Framing.ReadFrameAsync(_stream, _cts.Token).ConfigureAwait(false)
+                           ?? throw new InvalidOperationException("Client disconnected.");
+
+            var resp = Wire.Deserialize<RpcResponse>(respBytes);
+            if (resp.Error is not null) throw new InvalidOperationException(resp.Error);
+            return (T?)resp.Result;
+        }
+
+        public async Task RunClientLoopAsync(Func<string, object?[], Task<object?>> handler)
         {
             try
             {
                 while (!_cts.IsCancellationRequested)
                 {
-                    var inBytes = await Framing.ReadFrameAsync(_stream, _cts.Token).ConfigureAwait(false);
-                    if (inBytes is null) break; // disconnected
+                    var reqBytes = await Framing.ReadFrameAsync(_stream, _cts.Token).ConfigureAwait(false);
+                    if (reqBytes is null) break;
 
-                    RpcEnvelope<JsonElement?> env;
-                    try
-                    {
-                        env = JsonSerializer.Deserialize<RpcEnvelope<JsonElement?>>(inBytes, Json)
-                              ?? throw new InvalidOperationException("Invalid envelope.");
-                    }
+                    RpcEnvelope env;
+                    try { env = Wire.Deserialize<RpcEnvelope>(reqBytes); }
                     catch (Exception ex)
                     {
-                        var bad = new RpcResponse<object?> { Error = $"Bad request: {ex.Message}" };
-                        var badBytes = JsonSerializer.SerializeToUtf8Bytes(bad, Json);
-                        await Framing.WriteFrameAsync(_stream, badBytes, _cts.Token).ConfigureAwait(false);
+                        var bad = new RpcResponse { Error = "Bad request: " + ex.Message };
+                        await Framing.WriteFrameAsync(_stream, Wire.Serialize(bad), _cts.Token).ConfigureAwait(false);
                         continue;
                     }
 
-                    Console.WriteLine($"[CLIENT] <= {env.Method}");
-
-                    RpcResponse<object?> resp;
+                    RpcResponse resp;
                     try
                     {
-                        var result = await _handler(env.Method, env.Payload).ConfigureAwait(false);
-                        resp = new RpcResponse<object?> { Result = result };
-                        Console.WriteLine($"[CLIENT] => {env.Method} (ok)");
+                        var result = await handler(env.Method, env.Args).ConfigureAwait(false);
+                        resp = new RpcResponse { Result = result };
                     }
                     catch (Exception ex)
                     {
-                        resp = new RpcResponse<object?> { Error = ex.Message };
-                        Console.WriteLine($"[CLIENT] => {env.Method} (error: {ex.Message})");
+                        resp = new RpcResponse { Error = ex.ToString() };
                     }
 
-                    var outBytes = JsonSerializer.SerializeToUtf8Bytes(resp, Json);
-                    await Framing.WriteFrameAsync(_stream, outBytes, _cts.Token).ConfigureAwait(false);
+                    await Framing.WriteFrameAsync(_stream, Wire.Serialize(resp), _cts.Token).ConfigureAwait(false);
                 }
             }
-            catch (OperationCanceledException) { /* normal */ }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[CLIENT] Loop error: {ex}");
-            }
-            finally
-            {
-                try { _stream.Dispose(); } catch { }
-                try { _client.Dispose(); } catch { }
-            }
+            catch (OperationCanceledException) { }
+            finally { await DisposeAsync(); }
         }
-
 
         public async ValueTask DisposeAsync()
         {
-            _cts.Cancel();
-            try { await _loop.ConfigureAwait(false); } catch { /* ignore */ }
-            _cts.Dispose();
+            try { _cts.Cancel(); } catch { }
+            try { _stream.Dispose(); } catch { }
+            try { _client.Dispose(); } catch { }
+            await Task.CompletedTask;
         }
     }
 }

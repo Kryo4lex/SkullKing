@@ -1,28 +1,16 @@
-﻿#nullable enable
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace SkullKingCore.Network.Networking
+﻿namespace SkullKing.Network.Networking
 {
-    /// <summary>
-    /// Length-prefixed framing with a 4-byte big-endian header.
-    /// No Span/stackalloc so it compiles on C# 12.
-    /// </summary>
     public static class Framing
     {
         public const int MaxFrameBytes = 16 * 1024 * 1024; // 16 MB
 
-        public static async Task WriteFrameAsync(Stream stream, byte[]? payload, CancellationToken ct)
+        public static async Task WriteFrameAsync(Stream stream, byte[] payload, CancellationToken ct)
         {
-            if (stream is null) throw new ArgumentNullException(nameof(stream));
             payload ??= Array.Empty<byte>();
-
             if (payload.Length > MaxFrameBytes)
-                throw new InvalidOperationException($"Frame too large: {payload.Length} (max {MaxFrameBytes}).");
+                throw new InvalidOperationException($"Frame too large: {payload.Length}");
 
-            // Build 4-byte big-endian header without Span/stackalloc
+            // Use a plain array instead of Span/stackalloc to be C# 12 compatible
             var header = new byte[4];
             int len = payload.Length;
             header[0] = (byte)((len >> 24) & 0xFF);
@@ -31,23 +19,18 @@ namespace SkullKingCore.Network.Networking
             header[3] = (byte)(len & 0xFF);
 
             await stream.WriteAsync(header, 0, 4, ct).ConfigureAwait(false);
-            if (len > 0)
-                await stream.WriteAsync(payload, 0, len, ct).ConfigureAwait(false);
-
+            if (len > 0) await stream.WriteAsync(payload, 0, len, ct).ConfigureAwait(false);
             await stream.FlushAsync(ct).ConfigureAwait(false);
         }
 
         public static async Task<byte[]?> ReadFrameAsync(Stream stream, CancellationToken ct)
         {
-            if (stream is null) throw new ArgumentNullException(nameof(stream));
-
-            // Read 4-byte header
             var header = await ReadExactAsync(stream, 4, ct).ConfigureAwait(false);
-            if (header.Length == 0) return null; // remote closed
+            if (header.Length == 0) return null; // clean EOF
 
             int len = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
             if (len < 0 || len > MaxFrameBytes)
-                throw new InvalidOperationException($"Invalid frame length: {len}.");
+                throw new InvalidOperationException($"Invalid frame length: {len}");
 
             if (len == 0) return Array.Empty<byte>();
             return await ReadExactAsync(stream, len, ct).ConfigureAwait(false);
@@ -55,22 +38,19 @@ namespace SkullKingCore.Network.Networking
 
         private static async Task<byte[]> ReadExactAsync(Stream stream, int count, CancellationToken ct)
         {
-            var buffer = new byte[count];
+            var buf = new byte[count];
             int read = 0;
-
             while (read < count)
             {
-                int n = await stream.ReadAsync(buffer, read, count - read, ct).ConfigureAwait(false);
+                int n = await stream.ReadAsync(buf, read, count - read, ct).ConfigureAwait(false);
                 if (n == 0)
                 {
-                    // EOF
-                    if (read == 0) return Array.Empty<byte>();
-                    throw new EndOfStreamException($"Unexpected end of stream (needed {count}, got {read}).");
+                    if (read == 0) return Array.Empty<byte>(); // clean EOF at boundary
+                    throw new EndOfStreamException($"Unexpected EOF (needed {count}, got {read}).");
                 }
                 read += n;
             }
-
-            return buffer;
+            return buf;
         }
     }
 }

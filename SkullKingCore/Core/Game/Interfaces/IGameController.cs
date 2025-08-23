@@ -6,6 +6,8 @@ namespace SkullKingCore.Core.Game.Interfaces
     {
         string Name { get; }
 
+
+        Task<string> RequestName(GameState gameState, TimeSpan maxWait);
         Task NotifyRoundStartedAsync(GameState gameState);
         Task NotifyBidCollectionStartedAsync(GameState gameState);
         Task WaitForBidsReceivedAsync(GameState gameState);

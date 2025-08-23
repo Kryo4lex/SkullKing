@@ -1,41 +1,42 @@
-﻿// SkullKing.Network/Rpc/RpcContracts.cs
-#nullable enable
+﻿using System.Runtime.Serialization;
 
-using System.Text.Json;
-
-namespace SkullKingCore.Network.Rpc
+namespace SkullKing.Network.Rpc
 {
     /// <summary>
-    /// Request envelope sent from server -> client.
-    /// Method is the RPC method name (e.g., nameof(IGameController.RequestBidAsync)).
-    /// Payload is a method-specific DTO serialized with System.Text.Json.
+    /// Envelope for a remote procedure call request.
     /// </summary>
-    public sealed class RpcEnvelope<TPayload>
+    [DataContract]
+    public sealed class RpcEnvelope
     {
-        public string Method { get; set; } = "";
-        public TPayload? Payload { get; set; }
+        /// <summary>
+        /// Name of the method to call.
+        /// </summary>
+        [DataMember(Order = 1, IsRequired = true)]
+        public string Method { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Arguments for the call. May contain domain objects such as GameState, Player, Card, etc.
+        /// </summary>
+        [DataMember(Order = 2, IsRequired = true)]
+        public object?[] Args { get; set; } = Array.Empty<object?>();
     }
 
     /// <summary>
-    /// Response envelope sent from client -> server.
-    /// If Error is not null/empty, server should treat the call as failed.
+    /// Envelope for a remote procedure call response.
     /// </summary>
-    public sealed class RpcResponse<TResult>
+    [DataContract]
+    public sealed class RpcResponse
     {
+        /// <summary>
+        /// Result of the call (if any). May be null.
+        /// </summary>
+        [DataMember(Order = 1)]
+        public object? Result { get; set; }
+
+        /// <summary>
+        /// Error message if the call failed. Null if success.
+        /// </summary>
+        [DataMember(Order = 2)]
         public string? Error { get; set; }
-        public TResult? Result { get; set; }
-    }
-
-    /// <summary>
-    /// Central JSON options so both sides use the same casing & behavior.
-    /// (Optional helper for convenience; you can also inline these options).
-    /// </summary>
-    public static class RpcJson
-    {
-        public static readonly JsonSerializerOptions Options = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
     }
 }

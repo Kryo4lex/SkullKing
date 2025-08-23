@@ -1,15 +1,19 @@
 ﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.GameDefinitions.SubCardTypes;
+using System.Runtime.Serialization;
 
 namespace SkullKingCore.Core.Cards.Implementations
 {
+    [DataContract]
     public class PirateCard : Card
     {
-
+        [DataMember(Order = 1)]
         public PirateType PirateType { get; private set; }
 
         public override int? GenericValue => (int)PirateType;
+
+        private PirateCard() { }
 
         public PirateCard(PirateType pirateType) : base(CardType.PIRATE)
         {

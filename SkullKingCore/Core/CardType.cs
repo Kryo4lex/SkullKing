@@ -1,21 +1,28 @@
-﻿namespace SkullKingCore.GameDefinitions
+﻿using System.Runtime.Serialization;
+
+namespace SkullKingCore.GameDefinitions
 {
+
+    [DataContract]
     public enum CardType : int
     {
         //Suit Cards
-        GREEN,//Parrot
-        LILA,//Pirate Map
-        YELLOW,//Treasure Chest
-        BLACK,//Jolly Roger(?)/Pirate flag
+        [EnumMember] SERIALIZER,
+        [EnumMember] GREEN,//Parrot
+        [EnumMember] LILA,//Pirate Map
+        [EnumMember] YELLOW,//Treasure Chest
+        [EnumMember] BLACK,//Jolly Roger(?)/Pirate flag
         //Special Cards
-        PIRATE,
-        TIGRESS,
-        SKULL_KING,
-        MERMAID,
-        ESCAPE,
+        [EnumMember] PIRATE,
+        [EnumMember] TIGRESS,
+        [EnumMember] SKULL_KING,
+        [EnumMember] MERMAID,
+        [EnumMember] ESCAPE,
         //Expansion Cards
-        LOOT,
-        KRAKEN,
-        WHITE_WHALE
+        [EnumMember] LOOT,
+        [EnumMember] KRAKEN,
+        [EnumMember] WHITE_WHALE,
+        //Used for cards where the Card Type can be decided, e.g. the Mermaid
+        [EnumMember] JOKER,
     }
 }
