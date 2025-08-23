@@ -86,7 +86,7 @@ public class MainServerConsole
             Logger.Instance.WriteToConsoleAndLog($"Max Rounds  : {maxRounds}");
             Logger.Instance.WriteToConsoleAndLog("Players:");
             foreach (var p in players)
-                Logger.Instance.WriteToConsoleAndLog($" - {p.Name} (Id: {p.Id})");
+                Logger.Instance.WriteToConsoleAndLog($"o {p.Name}");
 
             if (numNets > 0)
             {
@@ -95,7 +95,7 @@ public class MainServerConsole
                 for (int i = 1; i <= numNets; i++)
                 {
                     int port = basePort + (i - 1);
-                    Logger.Instance.WriteToConsoleAndLog($"  NET{i}: 0.0.0.0:{port}  (client connects with: host {GetLocalIpHint()} port {port})");
+                    Logger.Instance.WriteToConsoleAndLog($"NET{i}: (client connects with: host {GetLocalIpHint()} port {port})");
                 }
                 Logger.Instance.WriteToConsoleAndLog("");
                 Logger.Instance.WriteToConsoleAndLog("Start your network clients now, then press Enter to begin the game...");

@@ -186,6 +186,8 @@ namespace SkullKingCore.Controller
             Logger.Instance.WriteToConsoleAndLog($"Press Enter Key to continue");
             Console.ReadLine();
 
+            Logger.Instance.WriteToConsoleAndLog(WaitingForOtherPlayer);
+
             return Task.CompletedTask;
         }
 
