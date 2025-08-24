@@ -2,7 +2,7 @@
 using SkullKingCore.Controller;
 using SkullKingCore.Logging;
 using SkullKingCore.Network;
-using SkullKingCore.Utility.UserInput;
+using SkullKingCore.Utility;
 
 public static class MainClientConsole
 {
@@ -12,14 +12,21 @@ public static class MainClientConsole
         try
         {
             Console.Title = "Skull King Console Network Client Human";
+
+            string host;
+            int port;
+
             /*
-            string host = "127.0.0.1";
-            int port = 1234;
+            host = "127.0.0.1";
+            port = 1234;
             */
 
-            Logger.Instance.WriteToConsoleAndLog("Enter IP/Host:");
-            string host = Console.ReadLine()!;
-            int port = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter Port", 0, 65535);
+            /*
+            host = Console.ReadLine()!;
+            port = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter Port", 0, 65535);
+            */
+
+            UserInput.ParseHostPortUntilValid("Enter Host:Port, e.g. 127.0.0.1:1234 :", out host, out port);
 
             Logger.Instance.WriteToConsoleAndLog($"Connecting to {host}:{port} ...");
 
@@ -38,5 +45,6 @@ public static class MainClientConsole
             Console.ReadLine();
         }
     }
+
 
 }

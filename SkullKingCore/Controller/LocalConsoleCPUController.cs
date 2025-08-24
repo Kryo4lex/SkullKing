@@ -74,7 +74,7 @@ namespace SkullKingCore.Controller
 
         }
 
-        public Task AnnounceBidAsync(GameState gameState, Player player, int bid, TimeSpan maxWait)
+        public Task AnnounceBidAsync(GameState gameState, TimeSpan maxWait)
         {
             //Logger.Instance.WriteToConsoleAndLog($"{player.Name} bids {bid}");
 
@@ -87,7 +87,7 @@ namespace SkullKingCore.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyCardPlayedAsync(Player player, Card playedCard)
+        public Task NotifyCardPlayedAsync(GameState gameState, Player player, Card playedCard)
         {
             /*
             string opponentPlayerName = gameState.Players.FirstOrDefault(x => x.Id == playerID).Name;
@@ -97,7 +97,7 @@ namespace SkullKingCore.Controller
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round)
+        public Task NotifyAboutSubRoundWinnerAsync(GameState gameState,Player? winner, Card? winningCard)
         {
             //no need to tell console CPU what is happening
             /*
@@ -165,6 +165,11 @@ namespace SkullKingCore.Controller
         }
 
         public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyAboutMainRoundEndAsync(GameState gameState)
         {
             return Task.CompletedTask;
         }

@@ -12,9 +12,8 @@ namespace SkullKing.Network.Rpc
             typeof(GameState),
             typeof(Player),
 
-            // player nested structs
-            typeof(Player.Round),
-            typeof(Player.PredictedWins),
+            // player nested
+            typeof(RoundStat),
 
             // base + concrete cards
             typeof(Card),
@@ -31,7 +30,6 @@ namespace SkullKing.Network.Rpc
             // common containers used in Args / Result
             typeof(List<Player>),
             typeof(List<Card>),
-            typeof(Dictionary<Player.Round, Player.PredictedWins>),
 
             // primitives you pass around
             typeof(string),

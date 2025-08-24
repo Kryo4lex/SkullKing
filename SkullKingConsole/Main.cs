@@ -1,9 +1,6 @@
 ﻿using SkullKingConsole.Commands;
-using SkullKingCore.Controller;
-using SkullKingCore.Core.Game;
-using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Logging;
-using SkullKingCore.Utility.UserInput;
+using SkullKingCore.Utility;
 
 namespace SkullKingConsole
 {

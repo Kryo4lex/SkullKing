@@ -2,6 +2,7 @@
 using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
+using SkullKingCore.Logging;
 using System.Net;
 using System.Net.Sockets;
 
@@ -21,7 +22,7 @@ namespace SkullKing.Network.Server
             _listener = new TcpListener(IPAddress.Any, port);
             _listener.Start();
             _ = AcceptOnceAsync();
-            Console.WriteLine($"[Server] Waiting for network player on port {port} ...");
+            Logger.Instance.WriteToConsoleAndLog($"[Server] Waiting for network player on port {port} ...");
         }
 
         private async Task AcceptOnceAsync()
@@ -30,7 +31,7 @@ namespace SkullKing.Network.Server
             {
                 var tcp = await _listener.AcceptTcpClientAsync(_cts.Token).ConfigureAwait(false);
                 _conn = await RpcConnection.FromAcceptedAsync(tcp, _cts.Token).ConfigureAwait(false);
-                Console.WriteLine($"[Server] Network player connected.");
+                Logger.Instance.WriteToConsoleAndLog($"[Server] Network player connected.");
             }
             catch (OperationCanceledException) { }
         }
@@ -70,8 +71,8 @@ namespace SkullKing.Network.Server
         public async Task<int> RequestBidAsync(GameState gameState, int roundNumer, TimeSpan maxWait)
             => await CallAsync<int>(nameof(RequestBidAsync), gameState, roundNumer, maxWait)!.ConfigureAwait(false);
 
-        public Task AnnounceBidAsync(GameState gameState, Player player, int bid, TimeSpan maxWait)
-            => CallAsync<object?>(nameof(AnnounceBidAsync), gameState, player, bid, maxWait)!;
+        public Task AnnounceBidAsync(GameState gameState, TimeSpan maxWait)
+            => CallAsync<object?>(nameof(AnnounceBidAsync), gameState, maxWait)!;
 
         public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> allowed, List<Card> notAllowed)
             => CallAsync<object?>(nameof(NotifyNotAllCardsInHandCanBePlayed), gameState, allowed, notAllowed)!;
@@ -81,11 +82,11 @@ namespace SkullKing.Network.Server
                    .ConfigureAwait(false)
                ?? throw new InvalidOperationException("RequestCardPlayAsync returned null.");
 
-        public Task NotifyCardPlayedAsync(Player player, Card playedCard)
-            => CallAsync<object?>(nameof(NotifyCardPlayedAsync), player, playedCard)!;
+        public Task NotifyCardPlayedAsync(GameState gameState, Player player, Card playedCard)
+            => CallAsync<object?>(nameof(NotifyCardPlayedAsync), gameState, player, playedCard)!;
 
-        public Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round)
-            => CallAsync<object?>(nameof(NotifyAboutSubRoundWinnerAsync), player, winningCard, round)!;
+        public Task NotifyAboutSubRoundWinnerAsync(GameState gameState, Player? player, Card? winningCard)
+            => CallAsync<object?>(nameof(NotifyAboutSubRoundWinnerAsync), gameState, player, winningCard)!;
 
         public Task NotifyGameStartedAsync(GameState gameState)
             => CallAsync<object?>(nameof(NotifyGameStartedAsync), gameState)!;
@@ -95,6 +96,9 @@ namespace SkullKing.Network.Server
 
         public Task NotifyAboutSubRoundEndAsync(GameState gameState)
             => CallAsync<object?>(nameof(NotifyAboutSubRoundEndAsync), gameState)!;
+
+        public Task NotifyAboutMainRoundEndAsync(GameState gameState)
+            => CallAsync<object?>(nameof(NotifyAboutMainRoundEndAsync), gameState)!;
 
         public Task NotifyGameEndedAsync(GameState gameState)
             => CallAsync<object?>(nameof(NotifyGameEndedAsync), gameState)!;

@@ -1,6 +1,6 @@
 ﻿using SkullKingCore.Logging;
 
-namespace SkullKingCore.Utility.UserInput
+namespace SkullKingCore.Utility
 {
     public static class UserInput
     {
@@ -45,6 +45,41 @@ namespace SkullKingCore.Utility.UserInput
                 {
                     Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Invalid number. Try again.{Environment.NewLine}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Continuously prompts until a valid "host:port" is entered.
+        /// Supports IPv4, hostnames, and IPv6 with brackets ([::1]:1234).
+        /// Prints errors instead of throwing.
+        /// </summary>
+        public static void ParseHostPortUntilValid(string prompt, out string host, out int port)
+        {
+            host = "";
+            port = 0;
+
+            while (true)
+            {
+                Logger.Instance.WriteToConsoleAndLog(prompt);
+
+                var input = Console.ReadLine() ?? "";
+
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    Logger.Instance.WriteToConsoleAndLog("Error: input must not be empty.");
+                    continue;
+                }
+
+                if (Uri.TryCreate($"tcp://{input}", UriKind.Absolute, out var uri) &&
+                    !string.IsNullOrEmpty(uri.Host) &&
+                    uri.Port > 0 && uri.Port <= 65535)
+                {
+                    host = uri.Host;
+                    port = uri.Port;
+                    return;
+                }
+
+                Logger.Instance.WriteToConsoleAndLog("Error: invalid host:port format. Example: 127.0.0.1:1234 or [::1]:5678");
             }
         }
 

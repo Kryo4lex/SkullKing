@@ -2,7 +2,7 @@
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 using SkullKingCore.Statistics;
-using SkullKingCore.Utility.UserInput;
+using SkullKingCore.Utility;
 
 namespace SkullKingConsole.Commands
 {

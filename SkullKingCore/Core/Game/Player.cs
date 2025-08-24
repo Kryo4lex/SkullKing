@@ -21,15 +21,12 @@ namespace SkullKingCore.Core.Game
         [DataMember(Order = 3)]
         public List<Card> Hand { get; set; } = new();
 
-        [DataContract]
-        public readonly record struct Round([property: DataMember(Order = 1)] int Value);
-
-        [DataContract]
-        public readonly record struct PredictedWins([property: DataMember(Order = 1)] int Value);
-
-        // DataContractSerializer (XML) supports non-string dict keys out of the box
         [DataMember(Order = 4)]
-        public Dictionary<Round, PredictedWins> Bids { get; private set; } = new();
+        public List<RoundStat> RoundStats { get; set; } = new();
+
+        [DataMember(Order = 5)]
+        public int TotalScore { get; set; } = 0;
 
     }
+
 }

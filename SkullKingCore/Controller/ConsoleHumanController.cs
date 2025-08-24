@@ -4,7 +4,8 @@ using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
-using SkullKingCore.Utility.UserInput;
+using SkullKingCore.Utility;
+using System.Numerics;
 
 namespace SkullKingCore.Controller
 {
@@ -70,10 +71,10 @@ namespace SkullKingCore.Controller
                 Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Your cards:");
                 Card.PrintListFancy(player.Hand);
             }
-            else
-            {
-                Logger.Instance.WriteToConsoleAndLog($"Player with name '{Name}' not found.");
-            }
+            //else
+            //{
+            //    Logger.Instance.WriteToConsoleAndLog($"Player with name '{Name}' not found.");
+            //}
 
             int bid = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter your number of wins prediction:", 0, roundNumber);
 
@@ -85,12 +86,12 @@ namespace SkullKingCore.Controller
 
         }
 
-        public Task AnnounceBidAsync(GameState gameState, Player player, int bid, TimeSpan maxWait)
+        public Task AnnounceBidAsync(GameState gameState, TimeSpan maxWait)
         {
 
-            foreach (Player ps in gameState.Players)
+            foreach (Player p in gameState.Players)
             {
-                Logger.Instance.WriteToConsoleAndLog($"{ps.Name} bids {ps.Bids[new Player.Round(gameState.CurrentRound)].Value}");
+                Logger.Instance.WriteToConsoleAndLog($"{p.Name} bids {p.RoundStats.Where(x => x.Round == gameState.CurrentRound).First().PredictedWins}");
             }
 
             return Task.CompletedTask;
@@ -161,7 +162,7 @@ namespace SkullKingCore.Controller
 
         }
 
-        public Task NotifyCardPlayedAsync(Player player, Card playedCard)
+        public Task NotifyCardPlayedAsync(GameState gameState, Player player, Card playedCard)
         {
 
             //string opponentPlayerName = gameState.Players.FirstOrDefault(x => x.Id == playerID).Name;
@@ -184,24 +185,42 @@ namespace SkullKingCore.Controller
             //no need to tell console CPU what is happening
             Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}--- Sub round {gameState.CurrentSubRound}/{gameState.CurrentRound} ended ---");
             Logger.Instance.WriteToConsoleAndLog($"Press Enter Key to continue");
+
             Console.ReadLine();
 
             Logger.Instance.WriteToConsoleAndLog(WaitingForOtherPlayer);
 
+            Console.Clear();
+
             return Task.CompletedTask;
         }
 
-        public Task NotifyAboutSubRoundWinnerAsync(Player? player, Card? winningCard, int round)
+        public Task NotifyAboutMainRoundEndAsync(GameState gameState)
+        {
+            PrintCurrentStats(gameState);
+
+            Console.ReadLine();
+
+            Logger.Instance.WriteToConsoleAndLog(WaitingForOtherPlayer);
+
+            Console.Clear();
+
+            return Task.CompletedTask;
+        }
+
+        public Task NotifyAboutSubRoundWinnerAsync(GameState gameState, Player? winner, Card? winningCard)
         {
 
-            if (player == null)
+            if (winner == null)
             {
-                Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}None!");
+                Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Winner: None!");
             }
             else
             {
-                Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}{player.Name} won round {round} with {winningCard}");
+                Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Winner: {winner.Name} won round {gameState.CurrentSubRound} with {winningCard}");
             }
+
+            PrintCurrentStats(gameState);
 
             return Task.CompletedTask;
         }
@@ -234,6 +253,25 @@ namespace SkullKingCore.Controller
 
             return Task.CompletedTask;
         }
+
+        private string GetCurrentRoundPlayerRoundStat(Player player, GameState gameState)
+        {
+            RoundStat roundStat = player.RoundStats.Where(x => x.Round == gameState.CurrentRound).First();
+
+            return $"(V: {roundStat.ActualWins} / P: {roundStat.PredictedWins} / B: {roundStat.BonusPoints} / TOT: {player.TotalScore})";
+        }
+
+        private void PrintCurrentStats(GameState gameState)
+        {
+            Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Current Stats:{Environment.NewLine}");
+
+            foreach (Player player in gameState.Players)
+            {
+                Logger.Instance.WriteToConsoleAndLog($"{player.Name} {GetCurrentRoundPlayerRoundStat(player, gameState)}");
+            }
+        }
+
+
 
     }
 }

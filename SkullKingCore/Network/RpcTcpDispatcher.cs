@@ -31,7 +31,7 @@ namespace SkullKingCore.Network
                     => Invoke(() => _impl.RequestBidAsync(Arg<GameState>(a, 0), Arg<int>(a, 1), Arg<TimeSpan>(a, 2))),
 
                 nameof(IGameController.AnnounceBidAsync)
-                    => Invoke(() => _impl.AnnounceBidAsync(Arg<GameState>(a, 0), Arg<Player>(a, 1), Arg<int>(a, 2), Arg<TimeSpan>(a, 3))),
+                    => Invoke(() => _impl.AnnounceBidAsync(Arg<GameState>(a, 0), Arg<TimeSpan>(a, 1))),
 
                 nameof(IGameController.WaitForBidsReceivedAsync)
                     => Invoke(() => _impl.WaitForBidsReceivedAsync(Arg<GameState>(a, 0))),
@@ -43,7 +43,7 @@ namespace SkullKingCore.Network
                     => Invoke(() => _impl.RequestCardPlayAsync(Arg<GameState>(a, 0), Arg<List<Card>>(a, 1), Arg<TimeSpan>(a, 2))),
 
                 nameof(IGameController.NotifyCardPlayedAsync)
-                    => Invoke(() => _impl.NotifyCardPlayedAsync(Arg<Player>(a, 0), Arg<Card>(a, 1))),
+                    => Invoke(() => _impl.NotifyCardPlayedAsync(Arg<GameState>(a, 0), Arg<Player>(a, 1), Arg<Card>(a, 2))),
 
                 nameof(IGameController.NotifyAboutSubRoundStartAsync)
                     => Invoke(() => _impl.NotifyAboutSubRoundStartAsync(Arg<GameState>(a, 0))),
@@ -51,8 +51,11 @@ namespace SkullKingCore.Network
                 nameof(IGameController.NotifyAboutSubRoundEndAsync)
                     => Invoke(() => _impl.NotifyAboutSubRoundEndAsync(Arg<GameState>(a, 0))),
 
+                nameof(IGameController.NotifyAboutMainRoundEndAsync)
+                    => Invoke(() => _impl.NotifyAboutMainRoundEndAsync(Arg<GameState>(a, 0))),
+
                 nameof(IGameController.NotifyAboutSubRoundWinnerAsync)
-                    => Invoke(() => _impl.NotifyAboutSubRoundWinnerAsync(Arg<Player?>(a, 0), Arg<Card?>(a, 1), Arg<int>(a, 2))),
+                    => Invoke(() => _impl.NotifyAboutSubRoundWinnerAsync(Arg<GameState>(a, 0), Arg<Player?>(a, 1), Arg<Card?>(a, 2))),
 
                 nameof(IGameController.NotifyGameEndedAsync)
                     => Invoke(() => _impl.NotifyGameEndedAsync(Arg<GameState>(a, 0))),
