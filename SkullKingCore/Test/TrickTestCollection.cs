@@ -1,8 +1,17 @@
 ﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Implementations;
+using SkullKingCore.Core.Cards.Interfaces;
+using SkullKingCore.Core.Game;
 using SkullKingCore.GameDefinitions;
 using SkullKingCore.GameDefinitions.SubCardTypes;
 using SkullKingCore.Logging;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using static SkullKingCore.Core.Game.Player;
+using static System.Formats.Asn1.AsnWriter;
+using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SkullKingCore.Test
 {
@@ -368,6 +377,28 @@ namespace SkullKingCore.Test
                     new NumberCard(CardType.LILA,   6),//Winner lead color and highest number
                     new NumberCard(CardType.GREEN, 14),
                 }, 2),
+
+                //Website:
+                // Q: What happens when the Kraken and the White Whale are played in the same trick?
+                // A: Whichever was played second retains its power. The first one played acts as an escape card. If the Kraken is played after the White Whale, the player who would have won the trick had neither creature been played, leads out the next trick.
+                new TrickTest("31", new List<Card>
+                {
+                    new EscapeCard(),//Winner
+                    new EscapeCard(),
+                    new EscapeCard(),
+                    new WhiteWhaleCard(),
+                }, 0),
+
+                //Rule Book:
+                //If only special cards were played, then the trick is discarded (like the Kraken) and the person who played the White Whale is the next to lead.
+                new TrickTest("32", new List<Card>
+                {
+                    new EscapeCard(),
+                    new PirateCard(PirateType.BENDT_THE_BANDIT),
+                    new MermaidCard(MermaidType.ALYRA),
+                    new SkullKingCard(),
+                    new WhiteWhaleCard(),
+                }, null),//No Winner, trick is discarded
 
             };
         }

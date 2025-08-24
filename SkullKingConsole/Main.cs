@@ -31,88 +31,18 @@ namespace SkullKingConsole
 
                 PrintOptions();
 
-                if (UserInput.TryReadInt($"{Environment.NewLine}Choose an option:", out int choice))
-                {
-                    if (Options.TryGetValue(choice, out var actionTuple))
-                    {
-                        Logger.Instance.WriteToConsoleAndLog($"{actionTuple.Description}");
+                int choice = UserInput.ReadIntUntilValid($"{Environment.NewLine}Choose an option:", 0, Options.Count - 1);
 
-                        actionTuple.Action();
+                Options.TryGetValue(choice, out var actionTuple);
 
-                        Console.ReadLine();
-                    }
-                    else
-                    {
-                        Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Not an option. Try again.{Environment.NewLine}");
-                    }
-                }
-                else
-                {
-                    Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Invalid number. Try again.{Environment.NewLine}");
-                }
+                Logger.Instance.WriteToConsoleAndLog($"{actionTuple.Description}");
+
+                actionTuple.Action();
+
+                Console.ReadLine();
 
             }
 
-        }
-
-        private static async void ConsoleCPUAndHumanControllerTest()
-        {
-
-            // 1. Create players
-            var players = new List<Player>();
-
-            for (int i = 1; i <= 3; i++)
-            {
-                Player player = new Player($"{i}", $"CPU_{i}");
-
-                players.Add(player);
-            }
-
-            Player humanPlayer = new Player("Human", "Human");
-
-            players.Add(humanPlayer);
-
-            // 2. Create controllers for each player
-            var controllers = new Dictionary<string, IGameController>();
-            foreach (var player in players)
-            {
-                controllers[player.Id] = new LocalConsoleCPUController(player.Name);
-            }
-
-            controllers[humanPlayer.Id] = new LocalConsoleHumanController();
-
-            // 3. Create the game state with, e.g., 5 rounds
-            var match = new GameHandler(players, startRound: 5, maxRounds: 5, controllers);
-
-            // 4. Run the game
-            await match.RunGameAsync();
-        }
-
-        private static async void ConsoleCPUControllerTest()
-        {
-
-            // 1. Create playersS
-            var players = new List<Player>();
-
-            for (int i = 1; i <= 4; i++)
-            {
-                Player player = new Player($"{i}", $"CPU_{i}");
-
-                players.Add(player);
-            }
-
-            // 2. Create controllers for each player
-            var controllers = new Dictionary<string, IGameController>();
-            foreach (var player in players)
-            {
-                controllers[player.Id] = new LocalConsoleCPUController(player.Name);
-            }
-
-            // 3. Create the game state with, e.g., 5 rounds
-            GameHandler match = new GameHandler(players, startRound: 5, maxRounds: 5, controllers);
-
-            // 4. Run the game
-            await match.RunGameAsync();
         }
 
         private static void PrintOptions()

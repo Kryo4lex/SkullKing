@@ -166,17 +166,39 @@ namespace SkullKingCore.Core
 
         /// <summary>
         /// Resolves trick when White Whale is played:
-        /// Only number cards matter, regardless of color or lead suit.
+        /// - If any number cards were played, the highest number wins (color/lead ignored).
+        /// - If no numbers were played and the only specials are Escapes and White Whale(s),
+        ///   the FIRST Escape wins (requested behavior).
+        /// - Otherwise (no numbers and other specials present), no winner here (let caller’s rules apply).
         /// </summary>
         private static int? ResolveWhiteWhaleTrick(List<CardInfo> cards)
         {
-            var candidates = cards.Where(x => Card.IsNumberCard(x.Type)).ToList();
-            if (!candidates.Any()) return null;
+            // 1) If any numbers were played, highest number wins (ties by earliest).
+            var numberCandidates = cards.Where(x => Card.IsNumberCard(x.Type)).ToList();
+            if (numberCandidates.Any())
+            {
+                return numberCandidates
+                    .OrderByDescending(x => x.Card.GenericValue ?? 0)
+                    .ThenBy(x => x.Index)
+                    .First().Index;
+            }
 
-            return candidates
-                .OrderByDescending(x => x.Card.GenericValue ?? 0)
-                .ThenBy(x => x.Index)
-                .First().Index;
+            // 2) No numbers at all → check for the special case:
+            //    Only Escapes and White Whale(s) are present → FIRST Escape wins.
+            bool anyNonEscapeNonWhaleSpecial = cards.Any(x =>
+                !Card.IsNumberCard(x.Type) &&
+                x.Type != CardType.ESCAPE &&
+                x.Type != CardType.WHITE_WHALE);
+
+            if (!anyNonEscapeNonWhaleSpecial)
+            {
+                var firstEscape = cards.FirstOrDefault(x => x.Type == CardType.ESCAPE);
+                if (firstEscape != null)
+                    return firstEscape.Index;
+            }
+
+            // 3) Otherwise (e.g., Mermaid/Pirate/SK involved), let the caller continue its normal flow.
+            return null;
         }
 
         /// <summary>
