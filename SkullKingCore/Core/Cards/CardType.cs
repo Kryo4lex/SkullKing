@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace SkullKingCore.GameDefinitions
+namespace SkullKingCore.Core.Cards
 {
 
     [DataContract]

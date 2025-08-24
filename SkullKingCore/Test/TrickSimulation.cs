@@ -1,8 +1,6 @@
-﻿using SkullKingCore.Core;
-using SkullKingCore.Core.Cards.Base;
+﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Extensions;
-using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 
 namespace SkullKingCore.Test

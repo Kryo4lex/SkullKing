@@ -1,9 +1,9 @@
 ﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Extensions;
 using SkullKingCore.Core.Game.Interfaces;
-using SkullKingCore.Core.Game.Scoring;
+using SkullKingCore.Core.Game.Scoring.Implementations;
+using SkullKingCore.Core.Game.Scoring.Interfaces;
 using SkullKingCore.Extensions;
-using SkullKingCore.GameDefinitions;
 
 namespace SkullKingCore.Core.Game
 {
@@ -12,11 +12,13 @@ namespace SkullKingCore.Core.Game
     {
         private readonly GameState _gameState;
         private readonly Dictionary<string, IGameController> _controllers;
+        public IScoringSystem ScoringSystem { get; private set; }
 
-        public GameHandler(List<Player> players, int startRound, int maxRounds, Dictionary<string, IGameController> controllers)
+        public GameHandler(List<Player> players, int startRound, int maxRounds, Dictionary<string, IGameController> controllers, IScoringSystem scoringSystem)
         {
             _controllers = controllers ?? throw new ArgumentNullException(nameof(controllers));
             _gameState = new GameState(players, startRound, maxRounds, Deck.CreateDeck());
+            ScoringSystem = scoringSystem;
         }
 
         public async Task RunGameAsync()
@@ -63,7 +65,7 @@ namespace SkullKingCore.Core.Game
         {
             foreach (Player player in _gameState.Players)
             {
-                player.TotalScore = SkullKingScoring.ComputeTotalScore(player);
+                player.TotalScore = ScoringSystem.ComputeTotalScore(player);
             }
         }
 

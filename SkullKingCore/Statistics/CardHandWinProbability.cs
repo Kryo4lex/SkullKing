@@ -1,10 +1,10 @@
 ﻿//#define COMPILE_OLDER_METHODS
 
-using SkullKingCore.Core;
+using SkullKingCore.Core.Cards;
 using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Implementations;
+using SkullKingCore.Core.Game;
 using SkullKingCore.Extensions;
-using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 using System.Collections.Concurrent;
 

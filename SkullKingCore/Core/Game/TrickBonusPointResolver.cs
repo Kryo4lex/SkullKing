@@ -1,8 +1,8 @@
-﻿using SkullKingCore.Core.Cards.Base;
+﻿using SkullKingCore.Core.Cards;
+using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Implementations;
-using SkullKingCore.GameDefinitions;
 
-namespace SkullKingCore.Core
+namespace SkullKingCore.Core.Game
 {
 
     /// <summary>

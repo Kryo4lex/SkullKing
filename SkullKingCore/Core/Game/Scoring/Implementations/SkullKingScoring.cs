@@ -1,12 +1,14 @@
-﻿namespace SkullKingCore.Core.Game.Scoring
+﻿using SkullKingCore.Core.Game.Scoring.Interfaces;
+
+namespace SkullKingCore.Core.Game.Scoring.Implementations
 {
-    public static class SkullKingScoring
+    public class SkullKingScoring : IScoringSystem
     {
         /// <summary>
         /// Computes total score for a player across all recorded RoundStats
         /// using standard Skull King scoring. BonusPoints count only on exact bids.
         /// </summary>
-        public static int ComputeTotalScore(Player player)
+        public int ComputeTotalScore(Player player)
             => player?.RoundStats?.Sum(ComputeRoundScore) ?? 0;
 
         /// <summary>
@@ -20,7 +22,7 @@
         ///     * wrong (ActualWins > 0)  => -10 * Round
         /// - BonusPoints apply only if bid is exact.
         /// </summary>
-        public static int ComputeRoundScore(RoundStat rs)
+        public int ComputeRoundScore(RoundStat rs)
         {
             if (rs == null) return 0;
 
@@ -29,7 +31,7 @@
 
             if (rs.PredictedWins == 0)
             {
-                basePoints = (rs.ActualWins == 0)
+                basePoints = rs.ActualWins == 0
                     ? 10 * rs.Round
                     : -10 * rs.Round;
             }

@@ -2,6 +2,7 @@
 using SkullKingCore.Controller;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
+using SkullKingCore.Core.Game.Scoring.Implementations;
 using SkullKingCore.Logging;
 using SkullKingCore.Utility;
 
@@ -119,7 +120,7 @@ public class MainServerConsole
 
             try
             {
-                var handler = new GameHandler(players, startRound, maxRounds, controllers);
+                var handler = new GameHandler(players, startRound, maxRounds, controllers, new SkullKingScoring());
 
                 await handler.RunGameAsync();
 

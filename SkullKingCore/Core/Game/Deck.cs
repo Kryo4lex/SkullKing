@@ -1,7 +1,8 @@
-﻿using SkullKingCore.Core.Cards.Base;
+﻿using SkullKingCore.Core.Cards;
+using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Factory;
 
-namespace SkullKingCore.GameDefinitions
+namespace SkullKingCore.Core.Game
 {
     public static class Deck
     {
@@ -30,7 +31,7 @@ namespace SkullKingCore.GameDefinitions
 
             List<Card> gameCards = new List<Card>();
 
-            foreach (CardTypeCardAmountPair cardTypeCardAmountPair in Deck.GameCardComposition)
+            foreach (CardTypeCardAmountPair cardTypeCardAmountPair in GameCardComposition)
             {
                 for (int cardTypeElementCounter = 1; cardTypeElementCounter <= cardTypeCardAmountPair.CardAmount; cardTypeElementCounter++)
                 {

@@ -1,17 +1,8 @@
-﻿using SkullKingCore.Core.Cards.Base;
+﻿using SkullKingCore.Core.Cards;
+using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Implementations;
-using SkullKingCore.Core.Cards.Interfaces;
-using SkullKingCore.Core.Game;
-using SkullKingCore.GameDefinitions;
-using SkullKingCore.GameDefinitions.SubCardTypes;
+using SkullKingCore.Core.Cards.SubCardTypes;
 using SkullKingCore.Logging;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using static SkullKingCore.Core.Game.Player;
-using static System.Formats.Asn1.AsnWriter;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SkullKingCore.Test
 {

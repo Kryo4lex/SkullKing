@@ -1,4 +1,4 @@
-﻿namespace SkullKingCore.GameDefinitions
+﻿namespace SkullKingCore.Core.Cards
 {
     public class CardTypeCardAmountPair
     {

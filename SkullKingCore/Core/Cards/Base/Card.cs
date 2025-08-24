@@ -1,5 +1,4 @@
 ﻿using SkullKingCore.Core.Cards.Interfaces;
-using SkullKingCore.GameDefinitions;
 using SkullKingCore.Logging;
 using System.Runtime.Serialization;
 

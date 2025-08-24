@@ -1,6 +1,4 @@
-﻿using SkullKingCore.GameDefinitions;
-
-namespace SkullKingCore.Core.Cards.Interfaces
+﻿namespace SkullKingCore.Core.Cards.Interfaces
 {
     public interface ICard
     {

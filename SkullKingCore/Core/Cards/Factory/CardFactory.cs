@@ -1,7 +1,6 @@
 ﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Implementations;
-using SkullKingCore.GameDefinitions;
-using SkullKingCore.GameDefinitions.SubCardTypes;
+using SkullKingCore.Core.Cards.SubCardTypes;
 
 namespace SkullKingCore.Core.Cards.Factory
 {

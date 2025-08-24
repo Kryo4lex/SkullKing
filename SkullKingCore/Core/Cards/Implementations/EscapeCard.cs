@@ -7,7 +7,7 @@ namespace SkullKingCore.Core.Cards.Implementations
     public class EscapeCard : Card
     {
 
-        public EscapeCard() : base(GameDefinitions.CardType.ESCAPE)
+        public EscapeCard() : base(CardType.ESCAPE)
         {
 
         }

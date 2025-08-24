@@ -1,4 +1,4 @@
-﻿namespace SkullKingCore.GameDefinitions.SubCardTypes
+﻿namespace SkullKingCore.Core.Cards.SubCardTypes
 {
     public enum PirateType : int
     {

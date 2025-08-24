@@ -1,5 +1,4 @@
 ﻿using SkullKingCore.Core.Cards.Base;
-using SkullKingCore.GameDefinitions;
 using System.Runtime.Serialization;
 
 namespace SkullKingCore.Core.Cards.Implementations
