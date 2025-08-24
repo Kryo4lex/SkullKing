@@ -11,6 +11,9 @@ namespace SkullKingCore.Core
     public static class TrickResolver
     {
 
+        //References:
+        //https://www.grandpabecksgames.com/pages/skull-king
+
         /// <summary>
         /// Returns the index of the winning card in the played list.
         /// Applies full Skull King card resolution rules:
