@@ -5,7 +5,7 @@ VisualStudioVersion = 17.14.36327.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkullKingCore", "SkullKingCore\SkullKingCore.csproj", "{B376F471-1275-4B4D-915B-CB295C9CC777}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkullKingConsole", "SkullKingConsole\SkullKingConsole.csproj", "{3A07FF83-FE7F-454D-AC5C-59B27B085FC3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkullKingSandboxConsole", "SkullKingSandboxConsole\SkullKingSandboxConsole.csproj", "{3A07FF83-FE7F-454D-AC5C-59B27B085FC3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkullKingClientConsole", "SkullKingClientConsole\SkullKingClientConsole.csproj", "{ACF29B9E-281E-4221-8BA3-01AF22537612}"
 EndProject
