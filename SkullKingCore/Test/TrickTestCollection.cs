@@ -391,6 +391,15 @@ namespace SkullKingCore.Test
                     new WhiteWhaleCard(),
                 }, null),//No Winner, trick is discarded
 
+                new TrickTest("33", new List<Card>
+                {
+                    new SkullKingCard(),
+                    new SkullKingCard(),
+                    new MermaidCard(MermaidType.ALYRA),//Winner, must beat also multiple cards
+                    new SkullKingCard(),
+                    new SkullKingCard(),
+                }, 2),
+
             };
         }
 
