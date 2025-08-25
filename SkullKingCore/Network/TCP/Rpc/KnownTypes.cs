@@ -2,7 +2,7 @@
 using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.Core.Game;
 
-namespace SkullKing.Network.Rpc
+namespace SkullKingCore.Network.TCP.Rpc
 {
     internal static class KnownTypes
     {
@@ -35,7 +35,7 @@ namespace SkullKing.Network.Rpc
             typeof(string),
             typeof(int),
             typeof(TimeSpan),
-            typeof(Nullable<int>),
+            typeof(int?),
         };
     }
 }

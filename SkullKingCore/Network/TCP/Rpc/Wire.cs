@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Xml;
 
-namespace SkullKing.Network.Rpc
+namespace SkullKingCore.Network.TCP.Rpc
 {
     internal static class Wire
     {

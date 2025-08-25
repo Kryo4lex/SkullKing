@@ -1,4 +1,4 @@
-﻿namespace SkullKing.Network.Networking
+﻿namespace SkullKingCore.Network.TCP.Networking
 {
     public static class Framing
     {
@@ -13,9 +13,9 @@
             // Use a plain array instead of Span/stackalloc to be C# 12 compatible
             var header = new byte[4];
             int len = payload.Length;
-            header[0] = (byte)((len >> 24) & 0xFF);
-            header[1] = (byte)((len >> 16) & 0xFF);
-            header[2] = (byte)((len >> 8) & 0xFF);
+            header[0] = (byte)(len >> 24 & 0xFF);
+            header[1] = (byte)(len >> 16 & 0xFF);
+            header[2] = (byte)(len >> 8 & 0xFF);
             header[3] = (byte)(len & 0xFF);
 
             await stream.WriteAsync(header, 0, 4, ct).ConfigureAwait(false);
@@ -28,7 +28,7 @@
             var header = await ReadExactAsync(stream, 4, ct).ConfigureAwait(false);
             if (header.Length == 0) return null; // clean EOF
 
-            int len = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
+            int len = header[0] << 24 | header[1] << 16 | header[2] << 8 | header[3];
             if (len < 0 || len > MaxFrameBytes)
                 throw new InvalidOperationException($"Invalid frame length: {len}");
 

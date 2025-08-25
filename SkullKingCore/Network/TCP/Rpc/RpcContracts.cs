@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace SkullKing.Network.Rpc
+namespace SkullKingCore.Network.TCP.Rpc
 {
     /// <summary>
     /// Envelope for a remote procedure call request.

@@ -32,7 +32,7 @@ namespace SkullKingCore.Logging
             }
             else
             {
-                assemblyNameToUse = $"{nameof(SkullKing)}";
+                assemblyNameToUse = $"SkullKing";
             }
 
             _logFilePath = $"{assemblyNameToUse}_log.txt";

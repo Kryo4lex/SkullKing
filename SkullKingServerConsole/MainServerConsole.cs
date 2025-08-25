@@ -1,9 +1,9 @@
-﻿using SkullKing.Network.Server;
-using SkullKingCore.Controller;
+﻿using SkullKingCore.Controller;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Core.Game.Scoring.Implementations;
 using SkullKingCore.Logging;
+using SkullKingCore.Network.TCP.Server;
 using SkullKingCore.Utility;
 
 public class MainServerConsole
@@ -39,7 +39,7 @@ public class MainServerConsole
 
             var players = new List<Player>(totalPlayers);
             var controllers = new Dictionary<string, IGameController>(totalPlayers);
-            var hostedNetworkControllers = new List<NetworkHostedGameController>(numNets);
+            var hostedNetworkControllers = new List<NetworkTCPHostedGameController>(numNets);
 
             // Build local human players
             for (int i = 1; i <= numLocalHumans; i++)
@@ -72,7 +72,7 @@ public class MainServerConsole
                 var player = new Player(name, name);
                 players.Add(player);
 
-                var controller = new NetworkHostedGameController(port, player.Id);
+                var controller = new NetworkTCPHostedGameController(port, player.Id);
                 hostedNetworkControllers.Add(controller);
                 controllers[player.Id] = controller;
             }

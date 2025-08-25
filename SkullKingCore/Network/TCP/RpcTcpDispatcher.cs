@@ -3,7 +3,7 @@ using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using System.Text.Json;
 
-namespace SkullKingCore.Network
+namespace SkullKingCore.Network.TCP
 {
     public sealed class RpcTcpDispatcher<TController>
         where TController : IGameController
@@ -143,7 +143,7 @@ namespace SkullKingCore.Network
             f().ContinueWith<object?>(_ => null);
 
         private static async Task<object?> Invoke<T>(Func<Task<T>> f) =>
-            (object?)await f();
+            await f();
 
         private static string Normalize(string m)
         {

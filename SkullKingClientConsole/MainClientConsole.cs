@@ -1,7 +1,8 @@
-﻿using SkullKing.Network.Rpc;
-using SkullKingCore.Controller;
+﻿using SkullKingCore.Controller;
 using SkullKingCore.Logging;
 using SkullKingCore.Network;
+using SkullKingCore.Network.TCP;
+using SkullKingCore.Network.TCP.Rpc;
 using SkullKingCore.Utility;
 
 public static class MainClientConsole
