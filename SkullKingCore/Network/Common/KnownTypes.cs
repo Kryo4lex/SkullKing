@@ -2,7 +2,7 @@
 using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.Core.Game;
 
-namespace SkullKingCore.Network.TCP.Rpc
+namespace SkullKingCore.Network.Common
 {
     internal static class KnownTypes
     {

@@ -28,12 +28,12 @@ namespace SkullKingCore.Network.TCP.Rpc
         public async Task<T?> InvokeAsync<T>(string method, params object?[] args)
         {
             var env = new RpcEnvelope { Method = method, Args = args ?? Array.Empty<object?>() };
-            await Framing.WriteFrameAsync(_stream, Wire.Serialize(env), _cts.Token).ConfigureAwait(false);
+            await Framing.WriteFrameAsync(_stream, WireTCP.Serialize(env), _cts.Token).ConfigureAwait(false);
 
             var respBytes = await Framing.ReadFrameAsync(_stream, _cts.Token).ConfigureAwait(false)
                            ?? throw new InvalidOperationException("Client disconnected.");
 
-            var resp = Wire.Deserialize<RpcResponse>(respBytes);
+            var resp = WireTCP.Deserialize<RpcResponse>(respBytes);
             if (resp.Error is not null) throw new InvalidOperationException(resp.Error);
             return (T?)resp.Result;
         }
@@ -48,11 +48,11 @@ namespace SkullKingCore.Network.TCP.Rpc
                     if (reqBytes is null) break;
 
                     RpcEnvelope env;
-                    try { env = Wire.Deserialize<RpcEnvelope>(reqBytes); }
+                    try { env = WireTCP.Deserialize<RpcEnvelope>(reqBytes); }
                     catch (Exception ex)
                     {
                         var bad = new RpcResponse { Error = "Bad request: " + ex.Message };
-                        await Framing.WriteFrameAsync(_stream, Wire.Serialize(bad), _cts.Token).ConfigureAwait(false);
+                        await Framing.WriteFrameAsync(_stream, WireTCP.Serialize(bad), _cts.Token).ConfigureAwait(false);
                         continue;
                     }
 
@@ -67,7 +67,7 @@ namespace SkullKingCore.Network.TCP.Rpc
                         resp = new RpcResponse { Error = ex.ToString() };
                     }
 
-                    await Framing.WriteFrameAsync(_stream, Wire.Serialize(resp), _cts.Token).ConfigureAwait(false);
+                    await Framing.WriteFrameAsync(_stream, WireTCP.Serialize(resp), _cts.Token).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) { }

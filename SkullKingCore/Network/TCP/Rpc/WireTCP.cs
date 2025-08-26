@@ -1,9 +1,10 @@
-﻿using System.Runtime.Serialization;
+﻿using SkullKingCore.Network.Common;
+using System.Runtime.Serialization;
 using System.Xml;
 
 namespace SkullKingCore.Network.TCP.Rpc
 {
-    internal static class Wire
+    internal static class WireTCP
     {
         private static DataContractSerializer GetSerializer(Type t)
         {
