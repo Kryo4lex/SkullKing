@@ -4,12 +4,14 @@ using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Core.Game.Scoring.Implementations;
 using SkullKingCore.Core.Game.Scoring.Interfaces;
 using SkullKingCore.Extensions;
+using System.Threading.Tasks;
 
 namespace SkullKingCore.Core.Game
 {
 
     public class GameHandler
     {
+
         private readonly GameState _gameState;
         private readonly Dictionary<string, IGameController> _controllers;
         public IScoringSystem ScoringSystem { get; private set; }
@@ -19,6 +21,11 @@ namespace SkullKingCore.Core.Game
             _controllers = controllers ?? throw new ArgumentNullException(nameof(controllers));
             _gameState = new GameState(players, startRound, maxRounds, Deck.CreateDeck());
             ScoringSystem = scoringSystem;
+
+            foreach (var ctrl in _controllers.Values)
+            {
+                ctrl.GameState = _gameState;
+            }
         }
 
         public async Task RunGameAsync()
@@ -78,13 +85,13 @@ namespace SkullKingCore.Core.Game
             // await BroadcastInParallelAsync(c => c.NotifyNameCollectionStartedAsync(_state));
 
             // 1) Ask EVERY player at once (no blocking between players)
-            var answers = await CollectFromAllPlayersAsync<string>(
+            var names = await CollectFromAllPlayersAsync<string>(
                 (player, controller) => controller.RequestName(_gameState, Timeout.InfiniteTimeSpan)
             ).ConfigureAwait(false);
 
             // 2) Sanitize + ensure uniqueness (case-insensitive), preserving starting order
             var seen = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            foreach (var (player, raw) in answers)
+            foreach (var (player, raw) in names)
             {
                 var seat = _gameState.Players.IndexOf(player) + 1;
                 var name = (raw ?? string.Empty).Trim();

@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -11,30 +12,22 @@ using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
 using SkullKingCore.Logging;
-using SkullKingCore.Network.WebRpc.Rpc;
+using SkullKingCore.Network.WebRpc.Rpc;   // WireWebRpc
 
 namespace SkullKingCore.Network.WebRpc.Server
 {
     /// <summary>
     /// Per-player proxy over HTTP long-poll, backed by an internal shared host (one Kestrel per port).
-    /// Same usage shape as TCP: new NetworkHttpHostedGameController(port, player.Id).
+    /// Usage is analogous to TCP: new NetworkWebHostedGameController(port, player.Id).
+    /// Also exposes a global, read-only GameState via /rpc/gamestate (plain JSON).
     /// </summary>
     public sealed class NetworkWebHostedGameController : IGameController, IAsyncDisposable
     {
         // -------- public knobs (set before first use) --------
-        /// <summary>Show Kestrel info logs (applies only if this instance starts the host).</summary>
         public bool EnableHostInfoLogs { get; set; } = false;
-
-        /// <summary>If null (default), wait indefinitely for first client contact; else throw after duration.</summary>
         public TimeSpan? ConnectTimeout { get; set; } = null;
-
-        /// <summary>If true, consider client disconnected when no HTTP traffic for <see cref="ClientIdleDisconnect"/>.</summary>
         public bool TreatNoTrafficAsDisconnect { get; set; } = false;
-
-        /// <summary>Only used with TreatNoTrafficAsDisconnect=true. Default 2 min.</summary>
         public TimeSpan ClientIdleDisconnect { get; set; } = TimeSpan.FromMinutes(2);
-
-        /// <summary>Log every RPC call and reply.</summary>
         public bool LogAllCalls { get; set; } = false;
 
         // -------- state --------
@@ -42,16 +35,24 @@ namespace SkullKingCore.Network.WebRpc.Server
         private readonly int _port;
         private string? _clientId;
         private bool _acceptStarted;
-        private Internal.WebRpcHost? _host; // set on first use
+        private Internal.WebRpcHost? _host;
 
         public string Name { get; }
+
+        /// <summary>
+        /// Latest GameState snapshot (global for the whole game). This controller updates it
+        /// on every proxy method that receives a GameState parameter.
+        /// </summary>
+        public GameState? GameState { get; set; }
 
         public NetworkWebHostedGameController(int port, string name = "NetPlayer")
         {
             _port = port;
             Name = name;
-            // Register our expected clientId immediately (host may start later)
+
+            // Pre-register expected clientId and a GLOBAL GameState provider for this port
             Internal.WebRpcHostRegistry.Register(_port, Name);
+            Internal.WebRpcHostRegistry.RegisterGlobalStateProvider(_port, () => GameState);
         }
 
         public NetworkWebHostedGameController(string baseUrl, string name = "NetPlayer")
@@ -70,7 +71,6 @@ namespace SkullKingCore.Network.WebRpc.Server
         private void EnsureHostingStarted()
         {
             if (_host is not null) return;
-            // First user to touch this port decides host logging
             _host = Internal.WebRpcHostRegistry.GetOrStart(_port, enableInfoLogs: EnableHostInfoLogs);
         }
 
@@ -131,66 +131,118 @@ namespace SkullKingCore.Network.WebRpc.Server
             }
         }
 
-        // -------- IGameController proxy --------
+        // -------- IGameController proxy (updates GameState when provided) --------
         public async Task<string> RequestName(GameState gameState, TimeSpan maxWait)
-            => await CallAsync<string?>(nameof(RequestName), gameState, maxWait).ConfigureAwait(false)
-               ?? throw new InvalidOperationException("RequestName returned null.");
+        {
+            GameState = gameState;
+            return await CallAsync<string?>(nameof(RequestName), gameState, maxWait).ConfigureAwait(false)
+                   ?? throw new InvalidOperationException("RequestName returned null.");
+        }
 
         public Task NotifyRoundStartedAsync(GameState gameState)
-            => CallAsync<object?>(nameof(NotifyRoundStartedAsync), gameState)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyRoundStartedAsync), gameState)!;
+        }
 
         public Task NotifyBidCollectionStartedAsync(GameState gameState)
-            => CallAsync<object?>(nameof(NotifyBidCollectionStartedAsync), gameState)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyBidCollectionStartedAsync), gameState)!;
+        }
 
         public Task WaitForBidsReceivedAsync(GameState gameState)
-            => CallAsync<object?>(nameof(WaitForBidsReceivedAsync), gameState)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(WaitForBidsReceivedAsync), gameState)!;
+        }
 
         public async Task<int> RequestBidAsync(GameState gameState, int roundNumer, TimeSpan maxWait)
-            => await CallAsync<int>(nameof(RequestBidAsync), gameState, roundNumer, maxWait)!.ConfigureAwait(false);
+        {
+            GameState = gameState;
+            return await CallAsync<int>(nameof(RequestBidAsync), gameState, roundNumer, maxWait)!.ConfigureAwait(false);
+        }
 
         public Task AnnounceBidAsync(GameState gameState, TimeSpan maxWait)
-            => CallAsync<object?>(nameof(AnnounceBidAsync), gameState, maxWait)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(AnnounceBidAsync), gameState, maxWait)!;
+        }
 
         public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> allowed, List<Card> notAllowed)
-            => CallAsync<object?>(nameof(NotifyNotAllCardsInHandCanBePlayed), gameState, allowed, notAllowed)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyNotAllCardsInHandCanBePlayed), gameState, allowed, notAllowed)!;
+        }
 
         public async Task<Card> RequestCardPlayAsync(GameState gameState, List<Card> hand, TimeSpan maxWait)
-            => await CallAsync<Card?>(nameof(RequestCardPlayAsync), gameState, hand, maxWait).ConfigureAwait(false)
-               ?? throw new InvalidOperationException("RequestCardPlayAsync returned null.");
+        {
+            GameState = gameState;
+            return await CallAsync<Card?>(nameof(RequestCardPlayAsync), gameState, hand, maxWait).ConfigureAwait(false)
+                   ?? throw new InvalidOperationException("RequestCardPlayAsync returned null.");
+        }
 
         public Task NotifyCardPlayedAsync(GameState gameState, Player player, Card playedCard)
-            => CallAsync<object?>(nameof(NotifyCardPlayedAsync), gameState, player, playedCard)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyCardPlayedAsync), gameState, player, playedCard)!;
+        }
 
         public Task NotifyAboutSubRoundWinnerAsync(GameState gameState, Player? player, Card? winningCard)
-            => CallAsync<object?>(nameof(NotifyAboutSubRoundWinnerAsync), gameState, player, winningCard)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyAboutSubRoundWinnerAsync), gameState, player, winningCard)!;
+        }
 
         public Task NotifyGameStartedAsync(GameState gameState)
-            => CallAsync<object?>(nameof(NotifyGameStartedAsync), gameState)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyGameStartedAsync), gameState)!;
+        }
 
         public Task NotifyAboutSubRoundStartAsync(GameState gameState)
-            => CallAsync<object?>(nameof(NotifyAboutSubRoundStartAsync), gameState)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyAboutSubRoundStartAsync), gameState)!;
+        }
 
         public Task NotifyAboutSubRoundEndAsync(GameState gameState)
-            => CallAsync<object?>(nameof(NotifyAboutSubRoundEndAsync), gameState)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyAboutSubRoundEndAsync), gameState)!;
+        }
 
         public Task NotifyAboutMainRoundEndAsync(GameState gameState)
-            => CallAsync<object?>(nameof(NotifyAboutMainRoundEndAsync), gameState)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyAboutMainRoundEndAsync), gameState)!;
+        }
 
         public Task NotifyGameEndedAsync(GameState gameState)
-            => CallAsync<object?>(nameof(NotifyGameEndedAsync), gameState)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyGameEndedAsync), gameState)!;
+        }
 
         public Task NotifyAboutGameWinnerAsync(GameState gameState, List<Player> winners)
-            => CallAsync<object?>(nameof(NotifyAboutGameWinnerAsync), gameState, winners)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyAboutGameWinnerAsync), gameState, winners)!;
+        }
 
         public Task ShowMessageAsync(string message)
             => CallAsync<object?>(nameof(ShowMessageAsync), message)!;
 
         public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player)
-            => CallAsync<object?>(nameof(NotifyPlayerTimedOutAsync), gameState, player)!;
+        {
+            GameState = gameState;
+            return CallAsync<object?>(nameof(NotifyPlayerTimedOutAsync), gameState, player)!;
+        }
 
         public async ValueTask DisposeAsync()
         {
             try { _cts.Cancel(); } catch { }
+            try { Internal.WebRpcHostRegistry.UnregisterGlobalStateProvider(_port); } catch { }
             await Task.CompletedTask;
         }
 
@@ -202,8 +254,14 @@ namespace SkullKingCore.Network.WebRpc.Server
             internal static class WebRpcHostRegistry
             {
                 private static readonly ConcurrentDictionary<int, WebRpcHost> _hosts = new();
+
+                // ids registered before host exists
                 private static readonly ConcurrentDictionary<int, ConcurrentDictionary<string, byte>> _preRegistered =
-                    new(); // ids registered before host exists
+                    new();
+
+                // global provider registered before host exists
+                private static readonly ConcurrentDictionary<int, Func<GameState?>> _preRegisteredGlobalProvider =
+                    new();
 
                 public static void Register(int port, string clientId)
                 {
@@ -213,15 +271,33 @@ namespace SkullKingCore.Network.WebRpc.Server
                         _preRegistered.GetOrAdd(port, _ => new(StringComparer.Ordinal))[clientId] = 1;
                 }
 
+                public static void RegisterGlobalStateProvider(int port, Func<GameState?> provider)
+                {
+                    if (_hosts.TryGetValue(port, out var host))
+                        host.RegisterGlobalStateProvider(provider);
+                    else
+                        _preRegisteredGlobalProvider[port] = provider; // last write wins
+                }
+
+                public static void UnregisterGlobalStateProvider(int port)
+                {
+                    if (_hosts.TryGetValue(port, out var host))
+                        host.UnregisterGlobalStateProvider();
+                    _preRegisteredGlobalProvider.TryRemove(port, out _);
+                }
+
                 public static WebRpcHost GetOrStart(int port, bool enableInfoLogs)
                 {
                     return _hosts.GetOrAdd(port, p =>
                     {
                         var host = new WebRpcHost(p, enableInfoLogs);
+
                         if (_preRegistered.TryGetValue(port, out var ids))
-                        {
                             foreach (var id in ids.Keys) host.Register(id);
-                        }
+
+                        if (_preRegisteredGlobalProvider.TryGetValue(port, out var prov))
+                            host.RegisterGlobalStateProvider(prov);
+
                         return host;
                     });
                 }
@@ -260,6 +336,18 @@ namespace SkullKingCore.Network.WebRpc.Server
                 }
                 private readonly ConcurrentDictionary<string, WaitingReply> _waitingReplies = new(StringComparer.Ordinal);
 
+                // GLOBAL GameState provider (one per port)
+                private Func<GameState?>? _globalStateProvider;
+
+                // Pretty, safe JSON for GameState
+                private static readonly JsonSerializerOptions s_stateJsonOptions = new()
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    IncludeFields = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                };
+
                 public WebRpcHost(int port, bool enableInfoLogs)
                 {
                     var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });
@@ -287,22 +375,19 @@ namespace SkullKingCore.Network.WebRpc.Server
                     _firstContact.GetOrAdd(clientId, _ => new(TaskCreationOptions.RunContinuationsAsynchronously));
                 }
 
+                public void RegisterGlobalStateProvider(Func<GameState?> provider) => _globalStateProvider = provider;
+                public void UnregisterGlobalStateProvider() => _globalStateProvider = null;
+
                 public async Task<string> WaitForFirstContactAsync(string clientId, TimeSpan? timeout, CancellationToken ct)
                 {
                     if (!_allowed.ContainsKey(clientId))
                         throw new InvalidOperationException($"ClientId '{clientId}' not registered.");
 
                     var tcs = _firstContact.GetOrAdd(clientId, _ => new(TaskCreationOptions.RunContinuationsAsynchronously));
-                    if (timeout is null)
-                    {
-                        using var l = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                        return await tcs.Task.WaitAsync(Timeout.InfiniteTimeSpan, l.Token).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        using var l = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                        return await tcs.Task.WaitAsync(timeout.Value, l.Token).ConfigureAwait(false);
-                    }
+                    using var l = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                    return timeout is null
+                        ? await tcs.Task.WaitAsync(Timeout.InfiniteTimeSpan, l.Token).ConfigureAwait(false)
+                        : await tcs.Task.WaitAsync(timeout.Value, l.Token).ConfigureAwait(false);
                 }
 
                 public async Task<byte[]> InvokeAsync(string clientId, byte[] payload, string methodForLog, bool logCall, CancellationToken ct)
@@ -345,6 +430,43 @@ namespace SkullKingCore.Network.WebRpc.Server
                 // ---- endpoints ----
                 private void MapEndpoints(WebApplication app)
                 {
+                    // GLOBAL GameState as plain JSON
+                    app.MapGet("/rpc/gamestate", async ctx =>
+                    {
+                        try
+                        {
+                            var prov = _globalStateProvider;
+                            if (prov is null)
+                            {
+                                ctx.Response.StatusCode = StatusCodes.Status404NotFound;
+                                await ctx.Response.WriteAsync("no provider");
+                                return;
+                            }
+
+                            var state = prov();
+                            if (state is null)
+                            {
+                                ctx.Response.StatusCode = StatusCodes.Status204NoContent;
+                                return;
+                            }
+
+                            // Stable snapshot to avoid concurrent mutation during serialization
+                            var wire = WireWebRpc.Serialize(state);
+                            var snapshot = WireWebRpc.Deserialize<GameState>(wire);
+
+                            ctx.Response.StatusCode = StatusCodes.Status200OK;
+                            ctx.Response.ContentType = "application/json; charset=utf-8";
+                            await JsonSerializer.SerializeAsync(ctx.Response.Body, snapshot, s_stateJsonOptions);
+                        }
+                        catch (Exception ex)
+                        {
+                            ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                            ctx.Response.ContentType = "application/json; charset=utf-8";
+                            var err = new { error = "gamestate_serialization_failed", message = ex.Message, exception = ex.GetType().FullName };
+                            await JsonSerializer.SerializeAsync(ctx.Response.Body, err, new JsonSerializerOptions { WriteIndented = true });
+                        }
+                    });
+
                     app.MapGet("/rpc/ping", async ctx =>
                     {
                         var clientId = ctx.Request.Query["clientId"].ToString();
@@ -410,15 +532,16 @@ namespace SkullKingCore.Network.WebRpc.Server
                 }
 
                 private bool IsAllowed(string? id) => !string.IsNullOrWhiteSpace(id) && _allowed.ContainsKey(id);
+
                 private void CompleteFirstContact(string id)
                 {
                     if (_firstContact.TryGetValue(id, out var tcs))
                     {
-                        // Only the first successful set returns true; this makes logging single-shot.
                         if (tcs.TrySetResult(id))
                             Logger.Instance.WriteToConsoleAndLog($"[WebRpc] Client '{id}' connected.");
                     }
                 }
+
                 private ClientQueues EnsureQueues(string id) => _clients.GetOrAdd(id, _ => new ClientQueues());
                 private void Touch(string id) => _lastSeenUtc[id] = DateTime.UtcNow;
 

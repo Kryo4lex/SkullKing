@@ -3,7 +3,6 @@ using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
-using SkullKingCore.Logging;
 
 namespace SkullKingCore.Controller
 {
@@ -14,6 +13,8 @@ namespace SkullKingCore.Controller
         private readonly Random _random = new();
 
         public string Name { get; }
+
+        public GameState? GameState { get; set; }
 
         public LocalConsoleCPUController(string name)
         {

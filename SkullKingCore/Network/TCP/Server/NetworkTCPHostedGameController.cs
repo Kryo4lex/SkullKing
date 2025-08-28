@@ -16,6 +16,8 @@ namespace SkullKingCore.Network.TCP.Server
 
         public string Name { get; }
 
+        public GameState? GameState { get; set; }
+
         public NetworkTCPHostedGameController(int port, string name = "NetPlayer")
         {
             Name = name;

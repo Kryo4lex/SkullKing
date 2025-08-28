@@ -14,6 +14,7 @@ namespace SkullKingCore.Controller
         private const string WaitingForOtherPlayer = "Waiting for other players...";
 
         public string Name { get; set; } = "NET Player";
+        public GameState? GameState { get; set; }
 
         public Task<string> RequestName(GameState gameState, TimeSpan maxWait)
         {

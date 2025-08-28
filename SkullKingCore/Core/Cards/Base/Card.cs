@@ -24,12 +24,13 @@ namespace SkullKingCore.Core.Cards.Base
         [DataMember(Order = 1)]
         public CardType CardType { get; set; }
 
-        [DataMember(Order = 2)]
-        public Guid GuId { get; private set; }
-
         //abstract to force child classes for their own implementation
         //virtual so that it can be overriden
-        public virtual int? GenericValue => null;
+        [DataMember(Order = 2)]
+        public virtual int? GenericValue { get; set; } = null;
+
+        [DataMember(Order = 3)]
+        public Guid GuId { get; private set; }
 
         protected Card(CardType type) : this()  // ensure GuId is set
         {

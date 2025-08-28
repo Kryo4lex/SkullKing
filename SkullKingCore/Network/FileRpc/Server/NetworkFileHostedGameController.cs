@@ -14,6 +14,8 @@ namespace SkullKingCore.Network.FileRpc.Server
 
         public string Name { get; }
 
+        public GameState? GameState { get; set; }
+
         /// <param name="folder">Shared folder path containing {clientId}.toServer / {clientId}.fromServer.</param>
         public NetworkFileHostedGameController(string folder, string name = "NetPlayer")
         {
