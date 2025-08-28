@@ -10,7 +10,7 @@ namespace SkullKingCore.Network.FileRpc.Server
     {
         private readonly string _folder;
         private readonly CancellationTokenSource _cts = new();
-        private RpcConnection? _conn;
+        private FileRpcConnection? _conn;
 
         public string Name { get; }
 
@@ -33,7 +33,7 @@ namespace SkullKingCore.Network.FileRpc.Server
                     foreach (var file in Directory.EnumerateFiles(_folder, "*.toServer", SearchOption.AllDirectories))
                     {
                         var clientId = Path.GetFileName(Path.GetDirectoryName(file))!;
-                        _conn = await RpcConnection.FromAcceptedAsync(_folder, clientId, _cts.Token).ConfigureAwait(false);
+                        _conn = await FileRpcConnection.FromAcceptedAsync(_folder, clientId, _cts.Token).ConfigureAwait(false);
                         Logger.Instance.WriteToConsoleAndLog($"[Server] File client '{clientId}' connected.");
                         return;
                     }

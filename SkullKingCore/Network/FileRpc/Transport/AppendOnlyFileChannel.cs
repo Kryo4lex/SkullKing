@@ -3,12 +3,11 @@
 namespace SkullKingCore.Network.FileRpc.Transport
 {
     /// <summary>
-    /// Event-driven mailbox file:
+    /// Deadlock-safe, event-driven append-only mailbox without Span usage (C# 12 compatible):
     /// - Writers append a line and close quickly.
-    /// - Reader wakes on FS events (Changed/Created/Renamed) or a rare fallback tick.
-    /// - After reading anything, TRUNCATE file to 0 bytes (prevents bloat).
-    /// 
-    /// Designed for minimal CPU: no busy polling, tiny I/O.
+    /// - Reader wakes on FS events or a short fallback tick.
+    /// - Reader keeps a byte offset and only consumes COMPLETE lines (ending with '\n').
+    /// - Reader truncates to zero ONLY when it has consumed exactly to EOF (after a length re-check).
     /// </summary>
     internal sealed class AppendOnlyFileChannel : IAsyncDisposable
     {
@@ -16,7 +15,8 @@ namespace SkullKingCore.Network.FileRpc.Transport
         private readonly Encoding _enc = new UTF8Encoding(false);
         private readonly FileSystemWatcher _watcher;
         private readonly SemaphoreSlim _signal = new(0, int.MaxValue);
-        private readonly TimeSpan _fallbackWake = TimeSpan.FromSeconds(5); // safety net
+        private readonly TimeSpan _fallbackWake = TimeSpan.FromSeconds(1);
+        private long _readOffset; // bytes fully consumed
 
         public string Path => _path;
 
@@ -30,7 +30,8 @@ namespace SkullKingCore.Network.FileRpc.Transport
                 Directory.CreateDirectory(dir);
 
             // Ensure mailbox exists
-            using var _ = new FileStream(_path, FileMode.OpenOrCreate, FileAccess.Read,
+            using var _ = new FileStream(
+                _path, FileMode.OpenOrCreate, FileAccess.Read,
                 FileShare.ReadWrite | FileShare.Delete, 1, FileOptions.Asynchronous);
 
             // Event-driven watcher
@@ -52,7 +53,7 @@ namespace SkullKingCore.Network.FileRpc.Transport
 
         private void TryRelease()
         {
-            try { _signal.Release(); } catch { /* ignore if already signaled */ }
+            try { _signal.Release(); } catch { /* ignore */ }
         }
 
         /// <summary>Append one line (envelope) and flush/close fast.</summary>
@@ -63,7 +64,8 @@ namespace SkullKingCore.Network.FileRpc.Transport
                 ct.ThrowIfCancellationRequested();
                 try
                 {
-                    using var fs = new FileStream(_path, FileMode.Append, FileAccess.Write,
+                    using var fs = new FileStream(
+                        _path, FileMode.Append, FileAccess.Write,
                         FileShare.ReadWrite | FileShare.Delete, 4096,
                         FileOptions.Asynchronous | FileOptions.WriteThrough | FileOptions.SequentialScan);
                     using var sw = new StreamWriter(fs, _enc);
@@ -79,18 +81,20 @@ namespace SkullKingCore.Network.FileRpc.Transport
         }
 
         /// <summary>
-        /// Wake on FS event (or rare timeout), drain lines, truncate if anything was read,
-        /// then yield the drained lines (outside of try/catch to satisfy C# iterator rules).
+        /// Event-driven reading:
+        /// - Wait for a signal (or short fallback).
+        /// - Read from _readOffset to current file length.
+        /// - Process only up to the last '\n' byte.
+        /// - Advance _readOffset to processed end.
+        /// - Truncate to 0 only if we consumed to the file's end (and length hasn't changed).
         /// </summary>
         public async IAsyncEnumerable<string> ReadLinesAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
         {
             while (!ct.IsCancellationRequested)
             {
-                // Wait for a signal or periodic fallback
-                bool gotSignal = false;
                 try
                 {
-                    gotSignal = await _signal.WaitAsync(_fallbackWake, ct).ConfigureAwait(false);
+                    await _signal.WaitAsync(_fallbackWake, ct).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -99,67 +103,124 @@ namespace SkullKingCore.Network.FileRpc.Transport
 
                 List<string>? batch = null;
 
-                // Drain inside try, but DO NOT yield here
                 try
                 {
                     batch = await DrainOnceAsync(ct).ConfigureAwait(false);
                 }
                 catch (IOException)
                 {
-                    // transient I/O — just try again
+                    // transient; try again on next event/tick
                 }
 
                 if (batch is { Count: > 0 })
                 {
-                    // Now it's safe to yield (outside try/catch)
                     foreach (var line in batch)
                         yield return line;
 
-                    // Immediately look again to catch bursts with minimal latency
+                    // Immediately look again to capture bursts with minimal latency
                     TryRelease();
-                }
-                else if (!gotSignal)
-                {
-                    // Timeout but nothing to read — just loop again
                 }
             }
         }
 
-        /// <summary>Read all lines currently in the file and truncate to 0 if any were read.</summary>
+        /// <summary>
+        /// Drain from current offset, only up to the last newline. No Span usage (C# 12 safe).
+        /// </summary>
         private async Task<List<string>> DrainOnceAsync(CancellationToken ct)
         {
-            var list = new List<string>(16);
+            var lines = new List<string>(16);
 
-            using (var fs = new FileStream(_path, FileMode.OpenOrCreate, FileAccess.Read,
+            long lengthAtOpen;
+            byte[]? buffer = null;
+            int bytesReadTotal = 0;
+
+            // 1) Snapshot length and read bytes from offset
+            using (var fs = new FileStream(
+                _path, FileMode.OpenOrCreate, FileAccess.Read,
                 FileShare.ReadWrite | FileShare.Delete, 8192,
                 FileOptions.Asynchronous | FileOptions.SequentialScan))
-            using (var sr = new StreamReader(fs, _enc, detectEncodingFromByteOrderMarks: false, bufferSize: 8192, leaveOpen: false))
             {
-                string? line;
-                while ((line = await sr.ReadLineAsync().ConfigureAwait(false)) != null)
+                if (_readOffset > fs.Length)
+                    _readOffset = 0;
+
+                lengthAtOpen = fs.Length;
+                if (lengthAtOpen <= _readOffset)
+                    return lines;
+
+                var toRead = checked((int)(lengthAtOpen - _readOffset));
+                buffer = new byte[toRead];
+                fs.Seek(_readOffset, SeekOrigin.Begin);
+                int n;
+                while (bytesReadTotal < toRead &&
+                       (n = await fs.ReadAsync(buffer, bytesReadTotal, toRead - bytesReadTotal, ct).ConfigureAwait(false)) > 0)
                 {
-                    line = line.TrimEnd('\r');
-                    if (line.Length == 0) continue;
-                    list.Add(line);
+                    bytesReadTotal += n;
                 }
             }
 
-            if (list.Count > 0)
+            if (bytesReadTotal == 0 || buffer is null)
+                return lines;
+
+            // 2) Find last newline within the freshly read bytes
+            int lastNewlineIdx = -1;
+            for (int i = bytesReadTotal - 1; i >= 0; i--)
             {
-                // Truncate (not delete) to avoid handle races and keep inode stable.
+                if (buffer[i] == (byte)'\n') { lastNewlineIdx = i; break; }
+            }
+
+            if (lastNewlineIdx < 0)
+            {
+                // No complete lines yet
+                return lines;
+            }
+
+            int processLen = lastNewlineIdx + 1; // include '\n'
+
+            // 3) Decode only the complete portion and split into lines (no Span)
+            var text = _enc.GetString(buffer, 0, processLen);
+
+            int start = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    int len = i - start;
+                    if (len > 0 && text[i - 1] == '\r') len--;
+                    if (len > 0)
+                    {
+                        var s = text.Substring(start, len);
+                        lines.Add(s);
+                    }
+                    start = i + 1;
+                }
+            }
+
+            // 4) Advance offset by consumed bytes
+            var newOffset = _readOffset + processLen;
+            _readOffset = newOffset;
+
+            // 5) Safe truncate if we consumed exactly to EOF (with re-check)
+            if (newOffset == lengthAtOpen)
+            {
                 try
                 {
-                    using var trunc = new FileStream(_path, FileMode.Open, FileAccess.ReadWrite,
+                    using var trunc = new FileStream(
+                        _path, FileMode.Open, FileAccess.ReadWrite,
                         FileShare.ReadWrite | FileShare.Delete, 1, FileOptions.Asynchronous);
-                    trunc.SetLength(0);
+
+                    if (trunc.Length == lengthAtOpen)
+                    {
+                        trunc.SetLength(0);
+                        _readOffset = 0;
+                    }
                 }
                 catch (IOException)
                 {
-                    // transient; ignore
+                    // if a writer raced us, skip truncation
                 }
             }
 
-            return list;
+            return lines;
         }
 
         public ValueTask DisposeAsync()

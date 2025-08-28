@@ -18,25 +18,25 @@ namespace SkullKingSandboxConsole.Commands
             int cardsOnHandCount;
             int maxParallelThreads;
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter N Simulations:", out nSimulations))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter N Simulations:", out nSimulations))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter number of cards on hands:", out cardsOnHandCount))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter number of cards on hands:", out cardsOnHandCount))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter Max Parallel Threads:", out maxParallelThreads))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Max Parallel Threads:", out maxParallelThreads))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
@@ -53,7 +53,7 @@ namespace SkullKingSandboxConsole.Commands
 
                 Card.PrintListFancy(allGameCards);
 
-                if (!UserInput.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to add to the hand {cardsOnHandCounter + 1}/{cardsOnHandCount}:", out cardIndex, 0, allGameCards.Count - 1))
+                if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to add to the hand {cardsOnHandCounter + 1}/{cardsOnHandCount}:", out cardIndex, 0, allGameCards.Count - 1))
                 {
                     Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                     return;

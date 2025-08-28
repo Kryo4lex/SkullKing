@@ -20,19 +20,19 @@ namespace SkullKingSandboxConsole.Commands
 
             Card.PrintListFancy(allGameCards);
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to run the Simulation for:", out cardIndex, 0, allGameCards.Count - 1))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to run the Simulation for:", out cardIndex, 0, allGameCards.Count - 1))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter N Simulations:", out nSimulations))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter N Simulations:", out nSimulations))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;

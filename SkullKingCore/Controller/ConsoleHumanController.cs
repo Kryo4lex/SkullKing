@@ -17,6 +17,8 @@ namespace SkullKingCore.Controller
 
         public Task<string> RequestName(GameState gameState, TimeSpan maxWait)
         {
+            Console.Clear();
+
             Logger.Instance.WriteToConsoleAndLog($"Enter your name:");
 
             string? name = Console.ReadLine();
@@ -75,7 +77,7 @@ namespace SkullKingCore.Controller
             //    Logger.Instance.WriteToConsoleAndLog($"Player with name '{Name}' not found.");
             //}
 
-            int bid = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter your number of wins prediction:", 0, roundNumber);
+            int bid = UserConsoleIO.ReadIntUntilValid($"{Environment.NewLine}Enter your number of wins prediction:", 0, roundNumber);
 
             Logger.Instance.WriteToConsoleAndLog($"");
             Logger.Instance.WriteToConsoleAndLog(WaitingForOtherPlayer);
@@ -125,7 +127,7 @@ namespace SkullKingCore.Controller
 
             Card.PrintListFancy(hand);
 
-            cardToPlayIndex = UserInput.ReadIntUntilValid($"{Environment.NewLine}Enter the index of the card you want to play:", 0, hand.Count - 1);
+            cardToPlayIndex = UserConsoleIO.ReadIntUntilValid($"{Environment.NewLine}Enter the index of the card you want to play:", 0, hand.Count - 1);
 
             Card card = hand[cardToPlayIndex];
 

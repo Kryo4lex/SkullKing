@@ -28,7 +28,7 @@ namespace SkullKingSandboxConsole
 
                 PrintOptions();
 
-                int choice = UserInput.ReadIntUntilValid($"{Environment.NewLine}Choose an option:", 0, Options.Count - 1);
+                int choice = UserConsoleIO.ReadIntUntilValid($"{Environment.NewLine}Choose an option:", 0, Options.Count - 1);
 
                 Options.TryGetValue(choice, out var actionTuple);
 

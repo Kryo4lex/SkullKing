@@ -2,13 +2,11 @@
 using SkullKingCore.Logging;
 using SkullKingCore.Network;
 using SkullKingCore.Network.FileRpc;
-// transport-specific namespaces
+using SkullKingCore.Network.FileRpc.Rpc;
 using SkullKingCore.Network.TCP;
+using SkullKingCore.Network.TCP.Rpc;
+using SkullKingCore.Network.WebRpc.Rpc;
 using SkullKingCore.Utility;
-
-using FileRpcConnection = SkullKingCore.Network.FileRpc.Rpc.RpcConnection;
-// disambiguate RpcConnection types
-using TcpRpcConnection = SkullKingCore.Network.TCP.Rpc.RpcConnection;
 
 namespace SkullKingClientConsole
 {
@@ -20,70 +18,98 @@ namespace SkullKingClientConsole
         {
             try
             {
-                Console.WriteLine("Select network transport:");
-                Console.WriteLine("  1) TCP (sockets)");
-                Console.WriteLine("  2) FileRpc (shared folder)");
-                var choice = UserInput.ReadIntUntilValid("Enter 1 or 2", 1, 2);
-                var transport = (TransportKind)choice;
 
-                Console.Title = transport switch
-                {
-                    TransportKind.Tcp => "Skull King Console Network Client Human (TCP)",
-                    TransportKind.FileRpc => "Skull King Console Network Client Human (FileRpc)",
-                    _ => "Skull King Console Network Client Human"
-                };
+                TransportKind transport = UserConsoleIO.PromptTransportKind();
+
+                Console.Title = $"Skull King Console Network Client Human ({Misc.GetEnumLabel(transport)})";
 
                 var controller = new ConsoleHumanController();
 
                 switch (transport)
                 {
                     case TransportKind.Tcp:
-                        {
-                            // Host:Port input (same UX as your original TCP client)
-                            string host;
-                            int port;
-                            UserInput.ParseHostPortUntilValid("Enter Host:Port, e.g. 127.0.0.1:1234 :", out host, out port);
+                    {
+                        string host;
+                        int port;
 
-                            Logger.Instance.WriteToConsoleAndLog($"Connecting to {host}:{port} ...");
+                        UserConsoleIO.ParseHostPortUntilValid("Enter Host:Port, e.g. 127.0.0.1:1234 :", out host, out port);
 
-                            await using var conn = await TcpRpcConnection.ConnectAsync(host, port, CancellationToken.None);
+                        Logger.Instance.WriteToConsoleAndLog($"Connecting to {host}:{port} ...");
 
-                            Logger.Instance.WriteToConsoleAndLog("Connected. Waiting for game requests...\n");
+                        await using var conn = await TcpRpcConnection.ConnectAsync(host, port, CancellationToken.None);
 
-                            var dispatcher = new RpcTcpDispatcher<ConsoleHumanController>(controller);
-                            await conn.RunClientLoopAsync(dispatcher.DispatchAsync);
-                            break;
-                        }
+                        Logger.Instance.WriteToConsoleAndLog("Connected. Waiting for game requests...\n");
+
+                        var dispatcher = new RpcTcpDispatcher<ConsoleHumanController>(controller);
+                        await conn.RunClientLoopAsync(dispatcher.DispatchAsync);
+                        break;
+                    }
 
                     case TransportKind.FileRpc:
+                    {
+                        Logger.Instance.WriteToConsoleAndLog("Enter ClientId (e.g., NET1): ");
+
+                        var clientId = (Console.ReadLine() ?? string.Empty).Trim();
+
+                        if (string.IsNullOrWhiteSpace(clientId))
                         {
-                            Console.Write("Enter ClientId (e.g., NET1): ");
-                            var clientId = (Console.ReadLine() ?? string.Empty).Trim();
-                            if (string.IsNullOrWhiteSpace(clientId))
-                                clientId = Environment.UserName;
-
-                            Console.Write("Enter shared folder path (e.g., C:\\Temp\\SkullKingShare\\NET1): ");
-                            var folder = (Console.ReadLine() ?? string.Empty).Trim();
-
-                            if (string.IsNullOrWhiteSpace(folder))
-                            {
-                                Logger.Instance.WriteToConsoleAndLog("No folder provided. Aborting.");
-                                return;
-                            }
-
-                            Logger.Instance.WriteToConsoleAndLog($"Connecting via files in '{folder}' as '{clientId}' ...");
-
-                            await using var conn = await FileRpcConnection.ConnectAsync(clientId, folder, CancellationToken.None);
-
-                            Logger.Instance.WriteToConsoleAndLog("Connected. Waiting for game requests...\n");
-
-                            var dispatcher = new RpcFileDispatcher<ConsoleHumanController>(controller);
-
-                            // bridge nullability: FileRpc RunClientLoopAsync may pass a null args array
-                            await conn.RunClientLoopAsync((method, args) =>
-                                dispatcher.DispatchAsync(method, args ?? Array.Empty<object?>()));
-                            break;
+                            clientId = Environment.UserName;
                         }
+
+                        Logger.Instance.WriteToConsoleAndLog("Enter shared folder path (e.g., C:\\Temp\\SkullKingShare\\NET1): ");
+
+                        var folder = (Console.ReadLine() ?? string.Empty).Trim();
+
+                        if (string.IsNullOrWhiteSpace(folder))
+                        {
+                            Logger.Instance.WriteToConsoleAndLog("No folder provided. Aborting.");
+                            return;
+                        }
+
+                        Logger.Instance.WriteToConsoleAndLog($"Connecting via files in '{folder}' as '{clientId}' ...");
+
+                        await using var conn = await FileRpcConnection.ConnectAsync(clientId, folder, CancellationToken.None);
+
+                        Logger.Instance.WriteToConsoleAndLog("Connected. Waiting for game requests...\n");
+
+                        var dispatcher = new RpcFileDispatcher<ConsoleHumanController>(controller);
+
+                        // bridge nullability: FileRpc RunClientLoopAsync may pass a null args array
+                        await conn.RunClientLoopAsync((method, args) =>
+                            dispatcher.DispatchAsync(method, args ?? Array.Empty<object?>()));
+
+                        break;
+                    }
+                    case TransportKind.WebRpc:
+                    {
+                        Logger.Instance.WriteToConsoleAndLog("Enter Base URL (e.g., http://localhost:5055/): ");
+
+                        var baseUrl = (Console.ReadLine() ?? string.Empty).Trim();
+
+                        Logger.Instance.WriteToConsoleAndLog("Enter ClientId (e.g., NET1): ");
+
+                        var clientId = (Console.ReadLine() ?? string.Empty).Trim();
+
+                        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(clientId))
+                        {
+                            Logger.Instance.WriteToConsoleAndLog("Base URL and ClientId required.");
+
+                            return;
+                        }
+
+                        Logger.Instance.WriteToConsoleAndLog($"Connecting via WebRpc {baseUrl} as '{clientId}' ...");
+
+                        await using var conn = await WebRpcConnection.ConnectAsync(baseUrl, clientId, CancellationToken.None);
+
+                        // Reuse file dispatcher (same method map)
+                        var dispatcher = new RpcFileDispatcher<ConsoleHumanController>(controller);
+
+                        Logger.Instance.WriteToConsoleAndLog("Connected. Waiting for game requests...\n");
+                            
+                        await conn.RunClientLoopAsync((m, a) => dispatcher.DispatchAsync(m, a ?? Array.Empty<object?>()));
+
+                        break;
+                    }
                 }
             }
             catch (Exception ex)
@@ -92,5 +118,7 @@ namespace SkullKingClientConsole
                 Console.ReadLine();
             }
         }
+
     }
+
 }

@@ -17,19 +17,19 @@ namespace SkullKingSandboxConsole.Commands
             int nSimulations;
             int maxParallelThreads;
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter N Simulations:", out nSimulations))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter N Simulations:", out nSimulations))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserInput.TryReadInt($"{Environment.NewLine}Enter Max Parallel Threads:", out maxParallelThreads))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Max Parallel Threads:", out maxParallelThreads))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;

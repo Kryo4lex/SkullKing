@@ -12,7 +12,7 @@ namespace SkullKingCore.Network.TCP.Server
     {
         private readonly TcpListener _listener;
         private readonly CancellationTokenSource _cts = new();
-        private RpcConnection? _conn;
+        private TcpRpcConnection? _conn;
 
         public string Name { get; }
 
@@ -30,7 +30,7 @@ namespace SkullKingCore.Network.TCP.Server
             try
             {
                 var tcp = await _listener.AcceptTcpClientAsync(_cts.Token).ConfigureAwait(false);
-                _conn = await RpcConnection.FromAcceptedAsync(tcp, _cts.Token).ConfigureAwait(false);
+                _conn = await TcpRpcConnection.FromAcceptedAsync(tcp, _cts.Token).ConfigureAwait(false);
                 Logger.Instance.WriteToConsoleAndLog($"[Server] Network player connected.");
             }
             catch (OperationCanceledException) { }

@@ -1,9 +1,11 @@
-﻿namespace SkullKingCore.Network
+﻿using System.ComponentModel;
+
+namespace SkullKingCore.Network
 {
-    public enum TransportKind
+    public enum TransportKind : int
     {
-        Tcp = 1,
-        FileRpc = 2,
-        /* future: NamedPipe = 3, Udp = 4, ... */
+        [Description("TCP (sockets)")] Tcp = 1,
+        [Description("FileRpc (shared folder)")] FileRpc = 2,
+        [Description("Web RPC — built-in web server (Kestrel), HTTP long-poll, single port")] WebRpc = 3,
     }
 }
