@@ -26,13 +26,13 @@ namespace SkullKingSandboxConsole.Commands
                 return;
             }
 
-            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount, Settings.MinPlayerCount, Settings.MaxPlayerCount))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter N Simulations:", out nSimulations))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter N Simulations:", out nSimulations, Settings.MinPlayerCount))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;

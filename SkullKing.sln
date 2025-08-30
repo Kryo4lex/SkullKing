@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkullKingClientConsole", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkullKingServerConsole", "SkullKingServerConsole\SkullKingServerConsole.csproj", "{435F4F1A-F80D-4460-BCF6-FA77275F1E50}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkullKingUnitTests", "SkullKingUnitTests\SkullKingUnitTests.csproj", "{6DD30157-E6B3-4A59-AC69-0AB6A68284AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{435F4F1A-F80D-4460-BCF6-FA77275F1E50}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{435F4F1A-F80D-4460-BCF6-FA77275F1E50}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{435F4F1A-F80D-4460-BCF6-FA77275F1E50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DD30157-E6B3-4A59-AC69-0AB6A68284AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DD30157-E6B3-4A59-AC69-0AB6A68284AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DD30157-E6B3-4A59-AC69-0AB6A68284AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DD30157-E6B3-4A59-AC69-0AB6A68284AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

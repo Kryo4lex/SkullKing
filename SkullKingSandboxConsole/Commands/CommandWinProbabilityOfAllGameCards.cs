@@ -17,7 +17,7 @@ namespace SkullKingSandboxConsole.Commands
             int nSimulations;
             int maxParallelThreads;
 
-            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Player Count:", out playerCount, Settings.MinPlayerCount, Settings.MaxPlayerCount))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
@@ -29,7 +29,7 @@ namespace SkullKingSandboxConsole.Commands
                 return;
             }
 
-            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Max Parallel Threads:", out maxParallelThreads))
+            if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter Max Parallel Threads:", out maxParallelThreads, 1))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;

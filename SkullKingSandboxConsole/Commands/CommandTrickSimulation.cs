@@ -15,13 +15,13 @@ namespace SkullKingSandboxConsole.Commands
             int playerCount;
             int round;
 
-            if (!UserConsoleIO.TryReadInt("Enter Player Count:", out playerCount))
+            if (!UserConsoleIO.TryReadInt("Enter Player Count:", out playerCount, Settings.MinPlayerCount, Settings.MaxPlayerCount))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;
             }
 
-            if (!UserConsoleIO.TryReadInt("Enter Round:", out round))
+            if (!UserConsoleIO.TryReadInt("Enter Round:", out round, 1, Settings.MaxRounds))
             {
                 Logger.Instance.WriteToConsoleAndLog("Cancelled.\n");
                 return;

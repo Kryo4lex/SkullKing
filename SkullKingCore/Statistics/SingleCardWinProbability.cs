@@ -56,7 +56,7 @@ namespace SkullKingCore.Statistics
                 int insertIndex = RandomHelper.RandomInt(0, PlayerCount);
                 trick.Insert(insertIndex, CardToTest);
 
-                Card? winner = TrickResolver.DetermineTrickWinnerCard(trick);
+                Card? winner = TrickResolver.GetWinningCard(trick);
 
                 if (winner == CardToTest)
                 {

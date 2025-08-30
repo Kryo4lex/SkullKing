@@ -171,7 +171,7 @@ namespace SkullKingCore.Statistics
                     // ---- RESOLUTION PHASE ----
                     // First, try to determine a normal winner; if the trick was destroyed by specials,
                     // determine who would have won under normal circumstances (for who leads next).
-                    int? winnerTrickIndex = TrickResolver.DetermineTrickWinnerIndex(cardsInPlay);
+                    int? winnerTrickIndex = TrickResolver.GetWinningPlayerIndex(cardsInPlay);
 
                     int winnerPlayer;
                     if (winnerTrickIndex.HasValue)
@@ -182,7 +182,7 @@ namespace SkullKingCore.Statistics
                     else
                     {
                         // Destroyed trick: choose the player who would have won under normal circumstances
-                        int fallbackTrickIndex = TrickResolver.DetermineTrickWinnerIndexNoSpecialCards(cardsInPlay);
+                        int fallbackTrickIndex = TrickResolver.GetWinningPlayerIndexNoSpecialCards(cardsInPlay);
                         winnerPlayer = trickOrderPlayers[fallbackTrickIndex];
                     }
 

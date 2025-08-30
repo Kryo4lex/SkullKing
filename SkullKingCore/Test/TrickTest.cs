@@ -29,7 +29,7 @@ namespace SkullKingCore.Test
         public void Test()
         {
 
-            WinnerIndex = TrickResolver.DetermineTrickWinnerIndex(Trick);
+            WinnerIndex = TrickResolver.GetWinningPlayerIndex(Trick);
 
             if (WinnerIndex != null)
             {

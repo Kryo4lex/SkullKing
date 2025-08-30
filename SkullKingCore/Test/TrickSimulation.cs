@@ -53,7 +53,7 @@ namespace SkullKingCore.Test
                 Logger.Instance.WriteToConsoleAndLog($"{playedCardOfPlayer}");
             }
 
-            int? indexOfWinningCard = TrickResolver.DetermineTrickWinnerIndex(currentTrick);
+            int? indexOfWinningCard = TrickResolver.GetWinningPlayerIndex(currentTrick);
 
             if (indexOfWinningCard == null)
             {
@@ -70,8 +70,6 @@ namespace SkullKingCore.Test
             }
 
         }
-
-
 
     }
 }

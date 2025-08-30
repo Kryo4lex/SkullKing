@@ -197,7 +197,7 @@ namespace SkullKingCore.Core.Game
                 await SendToAllControllersAsync(c => c.NotifyCardPlayedAsync(_gameState, player, playedCard));
             }
 
-            int? winnerIndex = TrickResolver.DetermineTrickWinnerIndex(cardsInPlay);
+            int? winnerIndex = TrickResolver.GetWinningPlayerIndex(cardsInPlay);
             Player? winner = null;
             Card? winningCard = null;
             int newStartingPlayerIndex = _gameState.StartingPlayerIndex; // default to current starting player
@@ -214,7 +214,7 @@ namespace SkullKingCore.Core.Game
             {
                 //this was a bug
                 //winnerIndex = TrickResolver.DetermineTrickWinnerIndexNoSpecialCards(cardsInPlay);
-                newStartingPlayerIndex = TrickResolver.DetermineTrickWinnerIndexNoSpecialCards(cardsInPlay);
+                newStartingPlayerIndex = TrickResolver.GetWinningPlayerIndexNoSpecialCards(cardsInPlay);
             }
 
             // Set the next starting player only if we have a winner

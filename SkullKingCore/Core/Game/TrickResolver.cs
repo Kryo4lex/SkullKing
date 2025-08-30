@@ -21,7 +21,7 @@ namespace SkullKingCore.Core.Game
         /// </summary>
         /// <param name="cardsPlayed">Cards in play order.</param>
         /// <returns>Index of winner, or null if no winner (Kraken cancel).</returns>
-        public static int? DetermineTrickWinnerIndex(List<Card> cardsPlayed)
+        public static int? GetWinningPlayerIndex(List<Card> cardsPlayed)
         {
             if (cardsPlayed == null || cardsPlayed.Count == 0)
             {
@@ -98,9 +98,9 @@ namespace SkullKingCore.Core.Game
         /// </summary>
         /// <param name="cardsPlayed">Cards in the order they were played.</param>
         /// <returns>The winning card, or null if the trick is cancelled (e.g., by Kraken).</returns>
-        public static Card? DetermineTrickWinnerCard(List<Card> cardsPlayed)
+        public static Card? GetWinningCard(List<Card> cardsPlayed)
         {
-            var indexOfWinningCard = DetermineTrickWinnerIndex(cardsPlayed);
+            var indexOfWinningCard = GetWinningPlayerIndex(cardsPlayed);
             return indexOfWinningCard.HasValue ? cardsPlayed[indexOfWinningCard.Value] : null;
         }
 
@@ -126,7 +126,7 @@ namespace SkullKingCore.Core.Game
         /// <returns>The index in <paramref name="cardsPlayed"/> of the player who would lead next under these rules.</returns>
         /// <exception cref="ArgumentException">If cardsPlayed is null or empty.</exception>
         /// <exception cref="InvalidOperationException">If only Krakens were played, or if resolution unexpectedly fails.</exception>
-        public static int DetermineTrickWinnerIndexNoSpecialCards(List<Card> cardsPlayed)
+        public static int GetWinningPlayerIndexNoSpecialCards(List<Card> cardsPlayed)
         {
             if (cardsPlayed == null || cardsPlayed.Count == 0)
                 throw new ArgumentException("cardsPlayed must contain at least one card.", nameof(cardsPlayed));
@@ -152,7 +152,7 @@ namespace SkullKingCore.Core.Game
                 }
 
                 // No Whale: resolve the special-only trick normally.
-                int? idxSpecials = DetermineTrickWinnerIndex(noKraken.Select(x => x.Card).ToList());
+                int? idxSpecials = GetWinningPlayerIndex(noKraken.Select(x => x.Card).ToList());
                 if (idxSpecials == null)
                     throw new InvalidOperationException("Unable to resolve winner with only special cards after removing Krakens.");
 
@@ -160,7 +160,7 @@ namespace SkullKingCore.Core.Game
             }
 
             // Numbers present: resolve normally without the Kraken(s).
-            int? idx = DetermineTrickWinnerIndex(noKraken.Select(x => x.Card).ToList());
+            int? idx = GetWinningPlayerIndex(noKraken.Select(x => x.Card).ToList());
             if (idx == null)
                 throw new InvalidOperationException("Unable to determine a winner after removing Krakens.");
 

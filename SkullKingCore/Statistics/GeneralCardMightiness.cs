@@ -2,6 +2,7 @@
 using SkullKingCore.Core.Game;
 using SkullKingCore.Logging;
 using SkullKingCore.Test;
+using System.Diagnostics;
 
 namespace SkullKingCore.Statistics
 {
@@ -120,32 +121,13 @@ namespace SkullKingCore.Statistics
 
                 for (int opposingCardCounter = 0; opposingCardCounter < OpposingCards.Count; opposingCardCounter++)
                 {
-                    TrickTest trickTestBestCase = new TrickTest("",
-                    new List<Card>()
-                    {
-                        CardToTest,
-                        OpposingCards[opposingCardCounter],
-                    }
-                    , 0);
-
-                    trickTestBestCase.Test();
-
-                    TrickTest trickWorstBestCase = new TrickTest("",
-                    new List<Card>()
-                    {
-                        OpposingCards[opposingCardCounter],
-                        CardToTest,
-                    }
-                    , 1);
-
-                    trickWorstBestCase.Test();
-
-                    if (trickTestBestCase.TestResult == TestResult.PASS)
+                                        
+                    if(TrickResolver.GetWinningPlayerIndex(new List<Card>() { CardToTest, OpposingCards[opposingCardCounter], }) == 0)
                     {
                         currentCardVictoriesBestCase++;
                     }
 
-                    if (trickWorstBestCase.TestResult == TestResult.PASS)
+                    if (TrickResolver.GetWinningPlayerIndex(new List<Card>() { OpposingCards[opposingCardCounter], CardToTest }) == 1)
                     {
                         currentCardVictoriesWorstCase++;
                     }

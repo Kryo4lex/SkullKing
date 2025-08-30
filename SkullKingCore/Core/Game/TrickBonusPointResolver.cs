@@ -25,15 +25,18 @@ namespace SkullKingCore.Core.Game
         /// <param name="cardsPlayed">Cards in the order they were played for this trick.</param>
         /// <param name="winnerIndex">Index into <paramref name="cardsPlayed"/> of the winning card.</param>
         /// <returns>Total bonus points awarded to the winner for this trick.</returns>
-        public static int ComputeTrickBonus(IReadOnlyList<Card> cardsPlayed, int winnerIndex)
+        public static int ComputeTrickBonus(IReadOnlyList<Card> cardsPlayed, int? winnerIndex)
         {
+            if(winnerIndex == null)
+                return 0;
+
             if (cardsPlayed is null || cardsPlayed.Count == 0)
                 return 0;
 
             if (winnerIndex < 0 || winnerIndex >= cardsPlayed.Count)
                 throw new ArgumentOutOfRangeException(nameof(winnerIndex));
 
-            var winner = cardsPlayed[winnerIndex];
+            var winner = cardsPlayed[winnerIndex.Value];
 
             var winnerType = GetEffectiveType(winner);
 

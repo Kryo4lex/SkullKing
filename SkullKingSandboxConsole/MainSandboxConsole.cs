@@ -7,21 +7,20 @@ namespace SkullKingSandboxConsole
     public class MainSandboxConsole
     {
 
-        public static Dictionary<int, (string Description, Action Action)> Options = new Dictionary<int, (string, Action)>
+        public static readonly List<(string Description, Action Action)> Options = new()
         {
-            { 0, ($"Exit Application", ExitMain) },
-            { 1, ($"Trick Tests", CommandTrickTests.Run) },
-            { 2, ($"Win Probability Single Card", CommandSimulationWinProbabilitySingleGameCard.Run) },
-            { 3, ($"Win Probability All Game Cards", CommandWinProbabilityOfAllGameCards.Run) },
-            { 4, ($"Card Hand Win Probability", CommandCardHandWinProbability.Run) },
-            { 5, ($"General Card Mightiness", CommandGeneralCardMightiness.Run) },
-            { 6, ($"Trick Simulation", CommandTrickSimulation.Run) },
+            ("Exit Application", ExitMain),
+            ("Win Probability Single Card", CommandSimulationWinProbabilitySingleGameCard.Run),
+            ("Win Probability All Game Cards", CommandWinProbabilityOfAllGameCards.Run),
+            ("Card Hand Win Probability", CommandCardHandWinProbability.Run),
+            ("General Card Mightiness", CommandGeneralCardMightiness.Run),
+            ("Trick Simulation", CommandTrickSimulation.Run),
         };
 
         public static void Main(string[] args)
         {
 
-            Logger.Instance.Initialize($"{nameof(SkullKingSandboxConsole)}_log.txt");
+            //Logger.Instance.Initialize($"{nameof(SkullKingSandboxConsole)}_log.txt");
 
             while (true)
             {
@@ -30,11 +29,11 @@ namespace SkullKingSandboxConsole
 
                 int choice = UserConsoleIO.ReadIntUntilValid($"{Environment.NewLine}Choose an option:", 0, Options.Count - 1);
 
-                Options.TryGetValue(choice, out var actionTuple);
+                var (description, action) = Options[choice];
 
-                Logger.Instance.WriteToConsoleAndLog($"{actionTuple.Description}");
+                Logger.Instance.WriteToConsoleAndLog(description);
 
-                actionTuple.Action();
+                action();
 
                 Console.ReadLine();
 
@@ -44,12 +43,10 @@ namespace SkullKingSandboxConsole
 
         private static void PrintOptions()
         {
-
-            foreach (var kvp in Options)
+            for (int i = 0; i < Options.Count; i++)
             {
-                Logger.Instance.WriteToConsoleAndLog($"{kvp.Key} - {kvp.Value.Description}");
+                Logger.Instance.WriteToConsoleAndLog($"{i} - {Options[i].Description}");
             }
-
         }
 
         private static void ExitMain()

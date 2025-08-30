@@ -39,10 +39,10 @@ namespace SkullKingCore.Logging
         }
 
         // Initialize with custom log file path.
-        public void Initialize(string logFilePath)
+        /*public void Initialize(string logFilePath)
         {
             _logFilePath = logFilePath;
-        }
+        }*/
 
         public static void EnableLogging() => _isLoggingEnabled = true;
         public static void DisableLogging() => _isLoggingEnabled = false;
