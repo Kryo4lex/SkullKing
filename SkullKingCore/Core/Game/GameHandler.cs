@@ -15,6 +15,7 @@ namespace SkullKingCore.Core.Game
         private readonly GameState _gameState;
         private readonly Dictionary<string, IGameController> _controllers;
         public IScoringSystem ScoringSystem { get; private set; }
+        private readonly LootAllianceTracker _lootTracker = new LootAllianceTracker();
 
         public GameHandler(List<Player> players, int startRound, int maxRounds, Dictionary<string, IGameController> controllers, IScoringSystem scoringSystem)
         {
@@ -57,6 +58,9 @@ namespace SkullKingCore.Core.Game
 
                     _gameState.CurrentSubRound++; // increment sub-round
                 }
+
+                // Apply LOOT bonuses for this round (writes into RoundStat.BonusPoints)
+                _lootTracker.ApplyEndOfRoundBonuses(_gameState, _gameState.CurrentRound);
 
                 UpdateTotalScores();
 
@@ -119,6 +123,9 @@ namespace SkullKingCore.Core.Game
         {
             // Reset sub-round counter at the start of each round
             _gameState.CurrentSubRound = 1;
+
+            // reset loot alliances for the new round
+            _lootTracker.Reset();
 
             // Announce the round to all controllers
             await SendToAllControllersAsync(c => c.NotifyRoundStartedAsync(_gameState));
@@ -198,6 +205,15 @@ namespace SkullKingCore.Core.Game
             }
 
             int? winnerIndex = TrickResolver.GetWinningPlayerIndex(cardsInPlay);
+
+            // record loot alliances for this trick
+            _lootTracker.ObserveTrick(
+                trick: cardsInPlay,
+                winnerRelIndex: winnerIndex,
+                startingPlayerAbsIndex: _gameState.StartingPlayerIndex,
+                playerCount: playerCount
+            );
+
             Player? winner = null;
             Card? winningCard = null;
             int newStartingPlayerIndex = _gameState.StartingPlayerIndex; // default to current starting player
