@@ -384,6 +384,144 @@ namespace SkullKingUnitTests.WinningPlayerTests
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.GREEN,  14),
             }, 3);
+
+            // L1 — All escape-like (Loot counts as Escape): first played wins (Captain’s Log-compatible)
+            yield return new TrickTest("L1", new List<Card>
+            {
+                new LootCard(),     // Winner (first escape-like)
+                new EscapeCard(),
+                new LootCard(),
+            }, 0);
+
+            // L2 — First is Escape, then only Loots: still first escape-like wins
+            yield return new TrickTest("L2", new List<Card>
+            {
+                new EscapeCard(),   // Winner (first escape-like)
+                new LootCard(),
+                new LootCard(),
+            }, 0);
+
+            // L3 — Numbers present; Loot is ignored for ranking; follow lead suit
+            yield return new TrickTest("L3", new List<Card>
+            {
+                new NumberCard(CardType.YELLOW, 10),
+                new LootCard(),
+                new NumberCard(CardType.YELLOW, 12), // Winner (lead suit, highest)
+            }, 2);
+
+            // L4 — Lead Loot; first number played sets suit; off-suit higher number does NOT win
+            yield return new TrickTest("L4", new List<Card>
+            {
+                new LootCard(),
+                new NumberCard(CardType.YELLOW, 11), // Winner (lead suit established here)
+                new NumberCard(CardType.GREEN, 14),
+                new NumberCard(CardType.YELLOW, 9),
+            }, 1);
+
+            // L5 — Pirate in trick: Pirate beats numbers and all escape-like (Loot/Escape)
+            yield return new TrickTest("L5", new List<Card>
+            {
+                new NumberCard(CardType.LILA, 14),
+                new LootCard(),
+                new PirateCard(PirateType.BENDT_THE_BANDIT), // Winner
+            }, 2);
+
+            // L6 — Skull King present (no Mermaid): Skull King wins; Loot irrelevant
+            yield return new TrickTest("L6", new List<Card>
+            {
+                new LootCard(),
+                new PirateCard(PirateType.JUANITA_JADE),
+                new SkullKingCard(), // Winner
+            }, 2);
+
+            // L7 — Mermaid + Pirate + Skull King combo (with Loot present): Mermaid wins
+            yield return new TrickTest("L7", new List<Card>
+            {
+                new LootCard(),
+                new SkullKingCard(),
+                new PirateCard(PirateType.HARRY_THE_GIANT),
+                new MermaidCard(MermaidType.ALYRA), // Winner (combo rule)
+            }, 3);
+
+            // L8 — White Whale + only escape-like (Loot/Escape): FIRST escape-like wins
+            yield return new TrickTest("L8", new List<Card>
+            {
+                new WhiteWhaleCard(),
+                new LootCard(),     // Winner (first escape-like after Whale)
+                new EscapeCard(),
+            }, 1);
+
+            // L9 — White Whale + numbers + Loot: highest number wins (color ignored)
+            yield return new TrickTest("L9", new List<Card>
+            {
+                new WhiteWhaleCard(),
+                new NumberCard(CardType.GREEN, 7),
+                new NumberCard(CardType.YELLOW, 9),  // Winner (highest number overall)
+                new LootCard(),
+                new NumberCard(CardType.BLACK, 5),
+            }, 2);
+
+            // L10 — Kraken cancels regardless of Loot
+            yield return new TrickTest("L10", new List<Card>
+            {
+                new LootCard(),
+                new KrakenCard(),
+                new NumberCard(CardType.YELLOW, 14),
+            }, null);
+
+            // L11 — Multiple Loots mixed with numbers; normal suit resolution applies
+            yield return new TrickTest("L11", new List<Card>
+            {
+                new NumberCard(CardType.GREEN, 8),
+                new LootCard(),
+                new LootCard(),
+                new NumberCard(CardType.GREEN, 13), // Winner (lead suit, highest)
+            }, 3);
+
+            // L12 — Black trump still trumps colors; Loot does not affect
+            yield return new TrickTest("L12", new List<Card>
+            {
+                new NumberCard(CardType.YELLOW, 14),
+                new LootCard(),
+                new NumberCard(CardType.BLACK, 1),  // Winner (black trumps colors)
+            }, 2);
+
+            // L13 — White Whale after numbers + tie on highest; earliest number wins; Loot irrelevant
+            yield return new TrickTest("L13", new List<Card>
+            {
+                new NumberCard(CardType.YELLOW, 11), // Winner (tie on value; earliest number)
+                new WhiteWhaleCard(),
+                new NumberCard(CardType.LILA, 11),
+                new LootCard(),
+            }, 0);
+
+            // L14 — White Whale with other specials present (Pirate) + Loot:
+            // Whale nullifies → no winner (trick discarded)
+            yield return new TrickTest("L14", new List<Card>
+            {
+                new WhiteWhaleCard(),
+                new LootCard(),
+                new PirateCard(PirateType.RASCAL_OF_ROATAN),
+            }, null);
+
+            // L15 — Lead Loot; everyone else plays Escapes (Captain’s Log): leader wins, no alliance (resolver returns winner index)
+            yield return new TrickTest("L15", new List<Card>
+            {
+                new LootCard(),     // Winner (only escape-like cards played)
+                new EscapeCard(),
+                new EscapeCard(),
+                new LootCard(),
+            }, 0);
+
+            // L16 - seen on Reddit
+            yield return new TrickTest("L16", new List<Card>
+            {
+                new PirateCard(PirateType.HARRY_THE_GIANT),
+                new LootCard(),
+                new WhiteWhaleCard(),
+                new EscapeCard(),
+            }, null);
+
         }
 
     }
