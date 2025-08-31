@@ -1,1 +1,0 @@
-.\SkullKingClientConsole\bin\Debug\net8.0\SkullKingClientConsole.exe filerpc NET1 "C:\Temp\SkullKingShare\NET1"

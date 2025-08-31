@@ -1,0 +1,1 @@
+..\.\SkullKingServerConsole\bin\Debug\net8.0\SkullKingServerConsole.exe file "C:\Temp\SkullKingShare" 0 3 1 5 10

@@ -1,1 +1,0 @@
-.\SkullKingServerConsole\bin\Debug\net8.0\SkullKingServerConsole.exe http 1234 0 3 1 5 10

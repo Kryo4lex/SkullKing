@@ -1,0 +1,1 @@
+..\.\SkullKingClientConsole\bin\Debug\net8.0\SkullKingClientConsole.exe tcp 127.0.0.1:1234
