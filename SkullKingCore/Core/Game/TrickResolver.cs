@@ -7,17 +7,17 @@ namespace SkullKingCore.Core.Game
     /// <summary>
     /// Resolves the winner of a trick in the game "Skull King"
     /// according to the official card interaction rules.
+    /// Loot cards are treated as Escapes for resolution and legality.
     /// </summary>
     public static class TrickResolver
     {
-
         //References:
         //https://www.grandpabecksgames.com/pages/skull-king
 
         /// <summary>
         /// Returns the index of the winning card in the played list.
         /// Applies full Skull King card resolution rules:
-        /// Kraken, Whale, Pirate, Skull King, Mermaid, Escapes, Trump, and Lead following.
+        /// Kraken, Whale, Pirate, Skull King, Mermaid, Escapes (incl. Loot), Trump, and Lead following.
         /// </summary>
         /// <param name="cardsPlayed">Cards in play order.</param>
         /// <returns>Index of winner, or null if no winner (Kraken cancel).</returns>
@@ -85,9 +85,9 @@ namespace SkullKingCore.Core.Game
             if (hasPirate && !hasSkullKing && !hasMermaid)
                 return FirstIndexOfType(typedCards, CardType.PIRATE);
 
-            // --- Step 3: All Escapes case ---
-            if (typedCards.All(x => x.Type == CardType.ESCAPE))
-                return 0; // First Escape wins if everyone escaped
+            // --- Step 3: All Escapes (incl. Loot) case ---
+            if (typedCards.All(x => IsEscapeLike(x.Type)))
+                return 0; // First escape-like (Escape or Loot) wins if everyone escaped
 
             // --- Step 4: Standard number card resolution ---
             return ResolveNumberTrick(typedCards, leadType);
@@ -120,12 +120,8 @@ namespace SkullKingCore.Core.Game
         /// return the (first) White Whale player’s index.
         /// 
         /// If, after removing Krakens, the remaining trick contains only specials but no White Whale,
-        /// resolve that trick normally (e.g., Skull King beats pirates and escapes; all Escapes → first Escape).
+        /// resolve that trick normally (e.g., Skull King beats pirates and escapes/loot; all Escapes/Loot → first escape-like).
         /// </summary>
-        /// <param name="cardsPlayed">Cards in the order they were played.</param>
-        /// <returns>The index in <paramref name="cardsPlayed"/> of the player who would lead next under these rules.</returns>
-        /// <exception cref="ArgumentException">If cardsPlayed is null or empty.</exception>
-        /// <exception cref="InvalidOperationException">If only Krakens were played, or if resolution unexpectedly fails.</exception>
         public static int GetWinningPlayerIndexNoSpecialCards(List<Card> cardsPlayed)
         {
             if (cardsPlayed == null || cardsPlayed.Count == 0)
@@ -170,8 +166,8 @@ namespace SkullKingCore.Core.Game
         /// <summary>
         /// Resolves trick when White Whale is played:
         /// - If any number cards were played, the highest number wins (color/lead ignored).
-        /// - If no numbers were played and the only specials are Escapes and White Whale(s),
-        ///   the FIRST Escape wins (requested behavior).
+        /// - If no numbers were played and the only specials are Escapes/Loot and White Whale(s),
+        ///   the FIRST Escape-like (Escape or Loot) wins (requested behavior).
         /// - Otherwise (no numbers and other specials present), no winner here (let caller’s rules apply).
         /// </summary>
         private static int? ResolveWhiteWhaleTrick(List<CardInfo> cards)
@@ -187,17 +183,17 @@ namespace SkullKingCore.Core.Game
             }
 
             // 2) No numbers at all → check for the special case:
-            //    Only Escapes and White Whale(s) are present → FIRST Escape wins.
-            bool anyNonEscapeNonWhaleSpecial = cards.Any(x =>
+            //    Only Escapes/Loot and White Whale(s) are present → FIRST Escape-like wins.
+            bool anyNonEscapeLikeNonWhaleSpecial = cards.Any(x =>
                 !Card.IsNumberCard(x.Type) &&
-                x.Type != CardType.ESCAPE &&
+                !IsEscapeLike(x.Type) &&
                 x.Type != CardType.WHITE_WHALE);
 
-            if (!anyNonEscapeNonWhaleSpecial)
+            if (!anyNonEscapeLikeNonWhaleSpecial)
             {
-                var firstEscape = cards.FirstOrDefault(x => x.Type == CardType.ESCAPE);
-                if (firstEscape != null)
-                    return firstEscape.Index;
+                var firstEscapeLike = cards.FirstOrDefault(x => IsEscapeLike(x.Type));
+                if (firstEscapeLike != null)
+                    return firstEscapeLike.Index;
             }
 
             // 3) Otherwise (e.g., Mermaid/Pirate/SK involved), let the caller continue its normal flow.
@@ -238,25 +234,20 @@ namespace SkullKingCore.Core.Game
         /// <summary>
         /// Computes the subset of <paramref name="playerHand"/> that is legal to play
         /// given the current trick, enforcing follow-suit for number cards ONLY when the
-        /// trick so far contains numbers and no special cards other than Escapes.
+        /// trick so far contains numbers and no special cards other than Escapes/Loot.
         /// 
         /// Official-rule alignment:
         /// - Lead color = suit of the first number card played (BLACK counts as a suit).
-        /// - Non-number cards (e.g., Escape, Pirate, Skull King, Mermaid, Tigress-as-escape/pirate,
+        /// - Non-number cards (e.g., Escape, Loot, Pirate, Skull King, Mermaid, Tigress-as-escape/pirate,
         ///   White Whale, Kraken) are always legal to play, regardless of lead color.
         /// - Follow-suit for number cards is required only when:
         ///     * at least one number card has been played in the trick, AND
-        ///     * no non-Escape special has been played (meaning no Pirate, Mermaid, Skull King,
+        ///     * no non-Escape-like special has been played (meaning no Pirate, Mermaid, Skull King,
         ///       Tigress-as-Pirate, White Whale, or Kraken has appeared yet).
-        ///   Examples:
-        ///     - First card is Escape, later a Yellow number appears, and no Pirate/Mermaid/SK/Whale/Kraken
-        ///       has been played → number cards must follow Yellow; specials still always legal.
-        ///     - If any non-Escape special (Pirate, Mermaid, Skull King, White Whale, Kraken, etc.)
-        ///       has been played at any point in the trick → no follow-suit requirement for number cards
-        ///       for the remainder of that trick.
         /// - If no number card has been played yet, all cards are legal.
         /// 
         /// Notes:
+        /// - Loot is treated as an Escape for all legality checks.
         /// - Tigress is never a number card; as Escape or Pirate, it is always legal to play.
         /// - White Whale and Kraken both cancel suit-following immediately once played.  
         ///   * White Whale changes resolution rules and removes color relevance.  
@@ -278,7 +269,8 @@ namespace SkullKingCore.Core.Game
             bool IsNonEscapeSpecial(Card c)
             {
                 var t = GetEffectiveType(c);
-                return !Card.IsNumberCard(t) && t != CardType.ESCAPE;
+                // Loot should be treated like Escape (i.e., NOT a non-escape special)
+                return !Card.IsNumberCard(t) && !IsEscapeLike(t);
             }
 
             // Determine if any number has been played in the trick so far.
@@ -288,19 +280,19 @@ namespace SkullKingCore.Core.Game
             if (!anyNumberPlayed)
                 return new List<Card>(playerHand);
 
-            // If any non-Escape special has been played (e.g., Pirate, Mermaid, Skull King, White Whale, Kraken),
+            // If any non-Escape-like special has been played (e.g., Pirate, Mermaid, Skull King, White Whale, Kraken),
             // then follow-suit for number cards is NOT enforced for the rest of this trick.
             bool anyNonEscapeSpecialPlayed = currentTrick!.Any(IsNonEscapeSpecial);
             if (anyNonEscapeSpecialPlayed)
                 return new List<Card>(playerHand);
 
-            // At this point: numbers have been played AND the only specials seen so far are Escapes.
+            // At this point: numbers have been played AND the only specials seen so far are Escapes/Loot.
             // → Enforce follow-suit for number cards.
             // Lead suit is the suit of the first number card played.
             var leadNumberCard = currentTrick!.First(c => IsNumber(c));
             var leadSuit = GetEffectiveType(leadNumberCard);
 
-            // Specials (non-number) are ALWAYS legal (e.g., Escape, Tigress-as-escape/pirate, etc.).
+            // Specials (non-number) are ALWAYS legal (e.g., Escape, Loot, Tigress-as-escape/pirate, etc.).
             var specialsAlwaysAllowed = playerHand.Where(c => !IsNumber(c));
 
             // Number cards in hand.
@@ -334,6 +326,7 @@ namespace SkullKingCore.Core.Game
         /// <summary>
         /// Gets the "effective" type of a card.
         /// For example, Tigress may count as Pirate or Escape depending on play choice.
+        /// Loot is its own type but is treated as Escape-like by resolver logic.
         /// </summary>
         private static CardType GetEffectiveType(Card card)
         {
@@ -344,10 +337,14 @@ namespace SkullKingCore.Core.Game
         }
 
         /// <summary>
+        /// Treat LOOT the same as ESCAPE for trick resolution and legality.
+        /// </summary>
+        private static bool IsEscapeLike(CardType type) =>
+            type == CardType.ESCAPE || type == CardType.LOOT;
+
+        /// <summary>
         /// Lightweight record holding card, its play order index, and resolved type.
         /// </summary>
         private record CardInfo(Card Card, int Index, CardType Type);
-
     }
-
 }
