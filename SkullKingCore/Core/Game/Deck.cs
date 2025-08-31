@@ -21,7 +21,7 @@ namespace SkullKingCore.Core.Game
             new CardTypeCardAmountPair(CardType.SKULL_KING,  1 ),
             new CardTypeCardAmountPair(CardType.MERMAID,     2 ),
             new CardTypeCardAmountPair(CardType.ESCAPE,      5 ),
-          //new CardTypeCardAmountPair(CardType.LOOT,        2 ),
+            new CardTypeCardAmountPair(CardType.LOOT,        2 ),
             new CardTypeCardAmountPair(CardType.KRAKEN,      1 ),
             new CardTypeCardAmountPair(CardType.WHITE_WHALE, 1 ),
         };
