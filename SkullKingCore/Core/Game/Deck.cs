@@ -13,7 +13,7 @@ namespace SkullKingCore.Core.Game
         public static readonly List<CardTypeCardAmountPair> GameCardComposition = new List<CardTypeCardAmountPair>()
         {
             new CardTypeCardAmountPair(CardType.GREEN,      14 ),
-            new CardTypeCardAmountPair(CardType.LILA,       14 ),
+            new CardTypeCardAmountPair(CardType.PURPLE,       14 ),
             new CardTypeCardAmountPair(CardType.YELLOW,     14 ),
             new CardTypeCardAmountPair(CardType.BLACK,      14 ),
             new CardTypeCardAmountPair(CardType.PIRATE,      5 ),

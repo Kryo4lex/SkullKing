@@ -37,7 +37,7 @@ namespace SkullKingCore.Core.Cards.Factory
 
                 case CardType.GREEN:
                 case CardType.YELLOW:
-                case CardType.LILA:
+                case CardType.PURPLE:
                 case CardType.BLACK:
 
                     return new NumberCard(cardType, value);

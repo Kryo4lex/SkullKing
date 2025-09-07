@@ -59,7 +59,7 @@ namespace SkullKingCore.Test
                 {
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW,  2),
-                    new NumberCard(CardType.LILA,    6),
+                    new NumberCard(CardType.PURPLE,    6),
                     new NumberCard(CardType.BLACK,   4),//Winner, black is stronger than other suit/color cards
                 }, 3),
 
@@ -67,7 +67,7 @@ namespace SkullKingCore.Test
                 {
                     new NumberCard(CardType.YELLOW,  12),//Winner, leading color and highest value of colors
                     new NumberCard(CardType.YELLOW,   5),
-                    new NumberCard(CardType.LILA,    14),
+                    new NumberCard(CardType.PURPLE,    14),
                 }, 0),
 
                 new TrickTest("0C", new List<Card>
@@ -90,7 +90,7 @@ namespace SkullKingCore.Test
                 {
                     new NumberCard(CardType.YELLOW,  8),//Winner
                     new NumberCard(CardType.YELLOW,  5),
-                    new NumberCard(CardType.LILA,   10),
+                    new NumberCard(CardType.PURPLE,   10),
                 }, 0),
 
                 //"Farbkarten", page 9, bottom
@@ -115,7 +115,7 @@ namespace SkullKingCore.Test
                 new TrickTest("5", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA,   14),
+                    new NumberCard(CardType.PURPLE,   14),
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW, 14),
                     new NumberCard(CardType.BLACK,  14),
@@ -139,7 +139,7 @@ namespace SkullKingCore.Test
                 new TrickTest("7", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA,   14),
+                    new NumberCard(CardType.PURPLE,   14),
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW, 14),
                     new NumberCard(CardType.BLACK,  14),
@@ -152,7 +152,7 @@ namespace SkullKingCore.Test
                 new TrickTest("8", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA,   14),
+                    new NumberCard(CardType.PURPLE,   14),
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW, 14),
                     new NumberCard(CardType.BLACK,  14),
@@ -165,7 +165,7 @@ namespace SkullKingCore.Test
                 new TrickTest("9", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA,   14),
+                    new NumberCard(CardType.PURPLE,   14),
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW, 14),
                     new NumberCard(CardType.BLACK,  14),
@@ -177,7 +177,7 @@ namespace SkullKingCore.Test
                 new TrickTest("10", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA,   14),
+                    new NumberCard(CardType.PURPLE,   14),
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW, 14),
                     new NumberCard(CardType.BLACK,  14),
@@ -190,7 +190,7 @@ namespace SkullKingCore.Test
                 new TrickTest("11", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA,   14),
+                    new NumberCard(CardType.PURPLE,   14),
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW, 14),
                     new NumberCard(CardType.BLACK,  14),
@@ -204,7 +204,7 @@ namespace SkullKingCore.Test
                 new TrickTest("12", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA,   14),
+                    new NumberCard(CardType.PURPLE,   14),
                     new NumberCard(CardType.GREEN,  14),
                     new NumberCard(CardType.YELLOW, 14),
                     new NumberCard(CardType.BLACK,  14),
@@ -219,8 +219,8 @@ namespace SkullKingCore.Test
                 new TrickTest("13", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA, 11),
-                    new NumberCard(CardType.LILA,  6),
+                    new NumberCard(CardType.PURPLE, 11),
+                    new NumberCard(CardType.PURPLE,  6),
                 }, 1),
 
                 // page 12, "Special Cards, "Leading with Special Cards", "Leading with a Character"
@@ -228,36 +228,36 @@ namespace SkullKingCore.Test
                 {
                     new PirateCard(PirateType.JUANITA_JADE),//Winner
                     new NumberCard(CardType.GREEN, 9),
-                    new NumberCard(CardType.LILA,  9),
+                    new NumberCard(CardType.PURPLE,  9),
                 }, 0),
 
                 new TrickTest("15", new List<Card>
                 {
                     new MermaidCard(MermaidType.ALYRA),//Winner
                     new NumberCard(CardType.GREEN, 9),
-                    new NumberCard(CardType.LILA,  9),
+                    new NumberCard(CardType.PURPLE,  9),
                 }, 0),
 
                 new TrickTest("16", new List<Card>
                 {
                     new SkullKingCard(),//Winner
                     new NumberCard(CardType.GREEN, 9),
-                    new NumberCard(CardType.LILA,  9),
+                    new NumberCard(CardType.PURPLE,  9),
                 }, 0),
 
                 new TrickTest("17", new List<Card>
                 {
                     new WhiteWhaleCard(),
                     new NumberCard(CardType.GREEN, 9),//Winner, First played
-                    new NumberCard(CardType.LILA,  9),
+                    new NumberCard(CardType.PURPLE,  9),
                 }, 1),
 
                 new TrickTest("18", new List<Card>
                 {
-                    new NumberCard(CardType.LILA,   8),
+                    new NumberCard(CardType.PURPLE,   8),
                     new NumberCard(CardType.BLACK, 10),//Winner, highest value
                     new WhiteWhaleCard(),
-                    new NumberCard(CardType.LILA,   4),
+                    new NumberCard(CardType.PURPLE,   4),
                 }, 1),
 
                 // page 24, "Weißer Wal", example
@@ -282,7 +282,7 @@ namespace SkullKingCore.Test
                 new TrickTest("20", new List<Card>
                 {
                     new NumberCard(CardType.GREEN,  14),
-                    new NumberCard(CardType.LILA,   14),
+                    new NumberCard(CardType.PURPLE,   14),
                     new NumberCard(CardType.YELLOW, 14),
                     new NumberCard(CardType.BLACK,  14),
                     new EscapeCard(),
@@ -303,7 +303,7 @@ namespace SkullKingCore.Test
                 new TrickTest("22", new List<Card>
                 {
                     new NumberCard(CardType.GREEN,  14),
-                    new NumberCard(CardType.LILA,   13),
+                    new NumberCard(CardType.PURPLE,   13),
                     new NumberCard(CardType.YELLOW, 12),
                     new NumberCard(CardType.BLACK,  11),
                     new KrakenCard(),
@@ -316,7 +316,7 @@ namespace SkullKingCore.Test
                     new NumberCard(CardType.BLACK,   2),
                     new NumberCard(CardType.YELLOW, 11),//Winner, same highest number, but first played
                     new NumberCard(CardType.GREEN,  11),
-                    new NumberCard(CardType.LILA,    1),
+                    new NumberCard(CardType.PURPLE,    1),
                     new WhiteWhaleCard(),
                 }, 2),
 
@@ -364,8 +364,8 @@ namespace SkullKingCore.Test
                 new TrickTest("30", new List<Card>
                 {
                     new EscapeCard(),
-                    new NumberCard(CardType.LILA,   1),
-                    new NumberCard(CardType.LILA,   6),//Winner lead color and highest number
+                    new NumberCard(CardType.PURPLE,   1),
+                    new NumberCard(CardType.PURPLE,   6),//Winner lead color and highest number
                     new NumberCard(CardType.GREEN, 14),
                 }, 2),
 

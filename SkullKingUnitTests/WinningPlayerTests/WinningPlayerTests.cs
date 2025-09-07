@@ -23,7 +23,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new NumberCard(CardType.BLACK,   4),//Winner, black is stronger than other suit/color cards
             };
             AssertWinnerIndex(trick, 3);
@@ -36,7 +36,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new NumberCard(CardType.YELLOW,  12),//Winner, leading color and highest value of colors
                 new NumberCard(CardType.YELLOW,   5),
-                new NumberCard(CardType.LILA,    14),
+                new NumberCard(CardType.PURPLE,    14),
             };
             AssertWinnerIndex(trick, 0);
         }
@@ -74,7 +74,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new NumberCard(CardType.YELLOW,  8),//Winner
                 new NumberCard(CardType.YELLOW,  5),
-                new NumberCard(CardType.LILA,   10),
+                new NumberCard(CardType.PURPLE,   10),
             };
             AssertWinnerIndex(trick, 0);
         }
@@ -114,7 +114,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.BLACK,  14),
@@ -148,7 +148,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.BLACK,  14),
@@ -166,7 +166,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.BLACK,  14),
@@ -184,7 +184,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.BLACK,  14),
@@ -201,7 +201,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.BLACK,  14),
@@ -219,7 +219,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.BLACK,  14),
@@ -238,7 +238,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.BLACK,  14),
@@ -258,8 +258,8 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA, 11),
-                new NumberCard(CardType.LILA,  6),
+                new NumberCard(CardType.PURPLE, 11),
+                new NumberCard(CardType.PURPLE,  6),
             };
             AssertWinnerIndex(trick, 1);
         }
@@ -272,7 +272,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new PirateCard(PirateType.JUANITA_JADE),//Winner
                 new NumberCard(CardType.GREEN, 9),
-                new NumberCard(CardType.LILA,  9),
+                new NumberCard(CardType.PURPLE,  9),
             };
             AssertWinnerIndex(trick, 0);
         }
@@ -284,7 +284,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new MermaidCard(MermaidType.ALYRA),//Winner
                 new NumberCard(CardType.GREEN, 9),
-                new NumberCard(CardType.LILA,  9),
+                new NumberCard(CardType.PURPLE,  9),
             };
             AssertWinnerIndex(trick, 0);
         }
@@ -296,7 +296,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new SkullKingCard(),//Winner
                 new NumberCard(CardType.GREEN, 9),
-                new NumberCard(CardType.LILA,  9),
+                new NumberCard(CardType.PURPLE,  9),
             };
             AssertWinnerIndex(trick, 0);
         }
@@ -308,7 +308,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new WhiteWhaleCard(),
                 new NumberCard(CardType.GREEN, 9),//Winner, First played
-                new NumberCard(CardType.LILA,  9),
+                new NumberCard(CardType.PURPLE,  9),
             };
             AssertWinnerIndex(trick, 1);
         }
@@ -318,10 +318,10 @@ namespace SkullKingUnitTests.WinningPlayerTests
         {
             var trick = new List<Card>
             {
-                new NumberCard(CardType.LILA,   8),
+                new NumberCard(CardType.PURPLE,   8),
                 new NumberCard(CardType.BLACK, 10),//Winner, highest value
                 new WhiteWhaleCard(),
-                new NumberCard(CardType.LILA,   4),
+                new NumberCard(CardType.PURPLE,   4),
             };
             AssertWinnerIndex(trick, 1);
         }
@@ -361,7 +361,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new NumberCard(CardType.GREEN,  14),
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.BLACK,  14),
                 new EscapeCard(),
@@ -392,7 +392,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new NumberCard(CardType.GREEN,  14),
-                new NumberCard(CardType.LILA,   13),
+                new NumberCard(CardType.PURPLE,   13),
                 new NumberCard(CardType.YELLOW, 12),
                 new NumberCard(CardType.BLACK,  11),
                 new KrakenCard(),
@@ -410,7 +410,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
                 new NumberCard(CardType.BLACK,   2),
                 new NumberCard(CardType.YELLOW, 11),//Winner, same highest number, but first played
                 new NumberCard(CardType.GREEN,  11),
-                new NumberCard(CardType.LILA,    1),
+                new NumberCard(CardType.PURPLE,    1),
                 new WhiteWhaleCard(),
             };
             AssertWinnerIndex(trick, 2);
@@ -493,8 +493,8 @@ namespace SkullKingUnitTests.WinningPlayerTests
             var trick = new List<Card>
             {
                 new EscapeCard(),
-                new NumberCard(CardType.LILA,   1),
-                new NumberCard(CardType.LILA,   6),//Winner lead color and highest number
+                new NumberCard(CardType.PURPLE,   1),
+                new NumberCard(CardType.PURPLE,   6),//Winner lead color and highest number
                 new NumberCard(CardType.GREEN, 14),
             };
             AssertWinnerIndex(trick, 2);
@@ -553,7 +553,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new NumberCard(CardType.GREEN,   1),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new NumberCard(CardType.GREEN,  14),
             };
             AssertWinnerIndex(trick, 3);
@@ -567,7 +567,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new NumberCard(CardType.GREEN,   1),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.GREEN,  14),
             };
@@ -633,7 +633,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
         {
             var trick = new List<Card>
             {
-                new NumberCard(CardType.LILA, 14),
+                new NumberCard(CardType.PURPLE, 14),
                 new LootCard(),
                 new PirateCard(PirateType.BENDT_THE_BANDIT), // Winner
             };
@@ -743,7 +743,7 @@ namespace SkullKingUnitTests.WinningPlayerTests
             {
                 new NumberCard(CardType.YELLOW, 11), // Winner (tie on value; earliest number)
                 new WhiteWhaleCard(),
-                new NumberCard(CardType.LILA, 11),
+                new NumberCard(CardType.PURPLE, 11),
                 new LootCard(),
             };
             AssertWinnerIndex(trick, 0);

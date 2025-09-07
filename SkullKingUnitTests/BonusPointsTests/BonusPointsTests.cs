@@ -29,7 +29,7 @@ namespace SkullKingUnitTests.BonusPointsTests
             {
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW, 2),
-                new NumberCard(CardType.LILA,   6),
+                new NumberCard(CardType.PURPLE,   6),
                 new NumberCard(CardType.BLACK,  4),
             };
             // expectedBonusPoints: 10, winnerIndex: 3
@@ -43,7 +43,7 @@ namespace SkullKingUnitTests.BonusPointsTests
             {
                 new NumberCard(CardType.YELLOW, 14),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new NumberCard(CardType.BLACK,   4),
             };
             AssertTrickBonus("2", trick, 3, 10);
@@ -54,9 +54,9 @@ namespace SkullKingUnitTests.BonusPointsTests
         {
             var trick = new List<Card>
             {
-                new NumberCard(CardType.LILA,   14),
+                new NumberCard(CardType.PURPLE,   14),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new NumberCard(CardType.BLACK,   4),
             };
             AssertTrickBonus("3", trick, 3, 10);
@@ -69,7 +69,7 @@ namespace SkullKingUnitTests.BonusPointsTests
             {
                 new NumberCard(CardType.BLACK,  14),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new SkullKingCard(),
             };
             AssertTrickBonus("4", trick, 3, 20);
@@ -82,7 +82,7 @@ namespace SkullKingUnitTests.BonusPointsTests
             {
                 new NumberCard(CardType.GREEN,   1),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new NumberCard(CardType.GREEN,  14),
             };
             AssertTrickBonus("5", trick, 3, 10);
@@ -95,7 +95,7 @@ namespace SkullKingUnitTests.BonusPointsTests
             {
                 new NumberCard(CardType.GREEN,   1),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new NumberCard(CardType.BLACK,  14),
             };
             AssertTrickBonus("6", trick, 3, 20);
@@ -122,7 +122,7 @@ namespace SkullKingUnitTests.BonusPointsTests
             {
                 new NumberCard(CardType.GREEN,  14),
                 new NumberCard(CardType.YELLOW,  2),
-                new NumberCard(CardType.LILA,    6),
+                new NumberCard(CardType.PURPLE,    6),
                 new NumberCard(CardType.BLACK,  14),
                 new WhiteWhaleCard(),
             };

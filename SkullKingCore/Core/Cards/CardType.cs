@@ -8,8 +8,8 @@ namespace SkullKingCore.Core.Cards
     {
         //Suit Cards
         [EnumMember] GREEN,//Parrot
-        [EnumMember] LILA,//Pirate Map
         [EnumMember] YELLOW,//Treasure Chest
+        [EnumMember] PURPLE,//Pirate Map
         [EnumMember] BLACK,//Jolly Roger(?)/Pirate flag
         //Special Cards
         [EnumMember] PIRATE,

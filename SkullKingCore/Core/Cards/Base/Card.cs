@@ -11,7 +11,7 @@ namespace SkullKingCore.Core.Cards.Base
 
         public static readonly List<CardType> NumberCardTypes = new List<CardType>
         {
-            CardType.LILA,
+            CardType.PURPLE,
             CardType.GREEN,
             CardType.YELLOW,
             CardType.BLACK,

@@ -49,7 +49,7 @@ namespace SkullKingCore.Core.Game
                 if (Card.IsNumberCard(t) && (c.GenericValue ?? 0) == 14)
                 {
                     // Standard suits: Yellow/Lila(Purple)/Green → +10 each
-                    if (t == CardType.YELLOW || t == CardType.LILA || t == CardType.GREEN)
+                    if (t == CardType.YELLOW || t == CardType.PURPLE || t == CardType.GREEN)
                         bonus += 10;
                     // Black (Jolly Roger) → +20 each
                     else if (t == CardType.BLACK)
