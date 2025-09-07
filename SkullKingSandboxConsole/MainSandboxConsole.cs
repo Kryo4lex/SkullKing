@@ -1,6 +1,8 @@
-﻿using SkullKingSandboxConsole.Commands;
+﻿using SkullKingCore.Core.Cards.Base;
+using SkullKingCore.Core.Game;
 using SkullKingCore.Logging;
 using SkullKingCore.Utility;
+using SkullKingSandboxConsole.Commands;
 
 namespace SkullKingSandboxConsole
 {
@@ -15,6 +17,7 @@ namespace SkullKingSandboxConsole
             ("Card Hand Win Probability", CommandCardHandWinProbability.Run),
             ("General Card Mightiness", CommandGeneralCardMightiness.Run),
             ("Trick Simulation", CommandTrickSimulation.Run),
+            ("Card Name Generation", CommandCardNameGen.Run),
         };
 
         public static void Main(string[] args)
