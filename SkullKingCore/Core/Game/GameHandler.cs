@@ -1,10 +1,8 @@
 ﻿using SkullKingCore.Core.Cards.Base;
 using SkullKingCore.Core.Cards.Extensions;
 using SkullKingCore.Core.Game.Interfaces;
-using SkullKingCore.Core.Game.Scoring.Implementations;
 using SkullKingCore.Core.Game.Scoring.Interfaces;
 using SkullKingCore.Extensions;
-using System.Threading.Tasks;
 
 namespace SkullKingCore.Core.Game
 {
@@ -200,6 +198,8 @@ namespace SkullKingCore.Core.Game
                 player.Hand.RemoveByGuid(playedCard.GuId);
 
                 cardsInPlay.Add(playedCard);
+
+                _gameState.CardsInPlay = cardsInPlay;
 
                 await SendToAllControllersAsync(c => c.NotifyCardPlayedAsync(_gameState, player, playedCard));
             }

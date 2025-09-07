@@ -34,5 +34,8 @@ namespace SkullKingCore.Core.Game
         [DataMember(Order = 7)]
         public List<Card> ShuffledGameCards { get; set; } = new();
 
+        [DataMember(Order = 8)]
+        public List<Card> CardsInPlay { get; set; } = new();
+
     }
 }

@@ -63,6 +63,23 @@ namespace SkullKingCore.Core.Cards.Base
             return NumberCardTypes.Contains(CardType);
         }
 
+        private string? _imageName;
+
+        public string ImageName => _imageName ??= GenerateImageName();
+
+        private string GenerateImageName()
+        {
+            var imageName = CardType.ToString();
+
+            var subTypeStr = SubType()?.ToString();
+            if (!string.IsNullOrEmpty(subTypeStr))
+            {
+                imageName += "_" + subTypeStr;
+            }
+
+            return imageName;
+        }
+
         public static void PrintListFancy(List<Card> cards, string headerIndex = "Index", string headerCardType = "Card Type", string headerSubType = "Sub Type")
         {
             // Determine the max width for each column based on headers and content
