@@ -9,29 +9,33 @@ namespace SkullKingClientUI.ViewModels
     {
         public int Index { get; }
 
-        private string _name;
+        private string _name = "";
         private int _totalScore;
         private CardVM? _cardInPlay;
 
         public string Name { get => _name; set { _name = value; OnPropertyChanged(); } }
         public int TotalScore { get => _totalScore; set { _totalScore = value; OnPropertyChanged(); } }
+
         public ObservableCollection<RoundStatVM> Rounds { get; } = new();
 
-        /// <summary>Null = waiting; otherwise played card.</summary>
+        /// <summary>Null = has not played yet.</summary>
         public CardVM? CardInPlay
         {
             get => _cardInPlay;
             set { _cardInPlay = value; OnPropertyChanged(); }
         }
 
-        public PlayerVM(Player p, int index)
+        public PlayerVM(Player model, int index)
         {
             Index = index;
-            _name = p.Name;
-            _totalScore = p.TotalScore;
+            _name = model.Name;
+            _totalScore = model.TotalScore;
 
-            foreach (var rs in p.RoundStats)
-                Rounds.Add(new RoundStatVM(rs));
+            if (model.RoundStats != null)
+            {
+                foreach (var rs in model.RoundStats)
+                    Rounds.Add(new RoundStatVM(rs));
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

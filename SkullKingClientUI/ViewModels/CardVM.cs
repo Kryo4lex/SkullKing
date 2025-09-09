@@ -3,17 +3,32 @@ using System.Windows.Media;
 
 namespace SkullKingClientUI.ViewModels
 {
-    /// <summary>UI card wrapper: resolves ImageSource once via ImageManager (no converters).</summary>
     public class CardVM
     {
         public Card Model { get; }
-        public string ImageName => Model.ImageName;
         public ImageSource? Image { get; }
+
+        private string? _imageName;
+
+        public string ImageName => _imageName ??= GenerateImageName();
+
+        private string GenerateImageName()
+        {
+            var imageName = Model.CardType.ToString();
+
+            var subTypeStr = Model.SubType()?.ToString();
+            if (!string.IsNullOrEmpty(subTypeStr))
+            {
+                imageName += "_" + subTypeStr;
+            }
+
+            return imageName;
+        }
 
         public CardVM(Card model)
         {
             Model = model;
-            Image = string.IsNullOrWhiteSpace(Model.ImageName) ? null : ImageManager.Instance.Get(Model.ImageName);
+            Image = string.IsNullOrWhiteSpace(ImageName) ? null : ImageManager.Instance.Get(ImageName);
         }
     }
 }

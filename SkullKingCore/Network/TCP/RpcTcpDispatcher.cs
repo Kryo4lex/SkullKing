@@ -12,8 +12,26 @@ namespace SkullKingCore.Network.TCP
 
         public RpcTcpDispatcher(TController impl) => _impl = impl;
 
-        public Task<object?> DispatchAsync(string method, object?[] a) =>
-            Normalize(method) switch
+        public event EventHandler? GameStateUpdated;
+
+        private void OnGameStateUpdated() => GameStateUpdated?.Invoke(this, EventArgs.Empty);
+
+        public Task<object?> DispatchAsync(string method, object?[] a)
+        {
+
+            foreach (object? obj in a)
+            {
+                if (obj is GameState gameState)
+                {
+                    _impl.GameState = gameState;
+                    break;
+                }
+            }
+
+            // Notify listeners that a dispatch with (a) GameState happened.
+            OnGameStateUpdated();
+
+            return Normalize(method) switch
             {
                 nameof(IGameController.RequestName)
                     => Invoke(() => _impl.RequestName(Arg<GameState>(a, 0), Arg<TimeSpan>(a, 1))),
@@ -71,6 +89,7 @@ namespace SkullKingCore.Network.TCP
 
                 _ => throw new InvalidOperationException($"Unknown method: {method}")
             };
+        }
 
         private static readonly JsonSerializerOptions s_jsonOptions = new()
         {

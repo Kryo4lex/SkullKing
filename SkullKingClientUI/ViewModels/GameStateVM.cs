@@ -9,19 +9,18 @@ namespace SkullKingClientUI.ViewModels
 {
     public class GameStateVM : INotifyPropertyChanged
     {
-        private readonly GameState _gs;
+        private GameState _gs;
 
         public ObservableCollection<PlayerVM> Players { get; } = new();
         public ObservableCollection<CardVM> CurrentHand { get; } = new();
 
-        private int _currentPlayerIndex = 0;
+        private int _currentPlayerIndex;
         public int CurrentPlayerIndex
         {
             get => _currentPlayerIndex;
-            set { if (_currentPlayerIndex != value) { _currentPlayerIndex = value; RefreshCurrentHand(); OnPropertyChanged(); } }
+            set { if (_currentPlayerIndex != value) { _currentPlayerIndex = value; OnPropertyChanged(); RefreshCurrentHand(); } }
         }
 
-        // Round info, with ready-to-bind formatted strings
         private int _currentRound;
         private int _currentSubRound;
         private int _maxRounds;
@@ -58,30 +57,75 @@ namespace SkullKingClientUI.ViewModels
         {
             _gs = gs;
 
+            // Build players
             for (int i = 0; i < gs.Players.Count; i++)
                 Players.Add(new PlayerVM(gs.Players[i], i));
 
             CurrentRound = gs.CurrentRound;
             CurrentSubRound = gs.CurrentSubRound;
             MaxRounds = gs.MaxRounds;
+            CurrentPlayerIndex = gs.StartingPlayerIndex; // or track elsewhere
 
-            RefreshCurrentHand(); // for CurrentPlayerIndex = 0
+            // Map CardsInPlay -> PlayerVM.CardInPlay
+            SyncCardsInPlayFromState(gs);
+
+            RefreshCurrentHand();
         }
 
-        /// <summary> Update each player's CardInPlay (index-aligned with Players). </summary>
-        public void SetCardsForPlayers(IList<Card?> cards)
+        public void ApplyGameState(GameState updated)
         {
+            _gs = updated;
+
+            // Update rounds + derived labels
+            CurrentRound = updated.CurrentRound;
+            CurrentSubRound = updated.CurrentSubRound;
+            MaxRounds = updated.MaxRounds;
+
+            // (Optional) If current player comes from server:
+            // CurrentPlayerIndex = updated.StartingPlayerIndex;
+
+            // Sync players count (add/remove)
+            while (Players.Count < updated.Players.Count)
+                Players.Add(new PlayerVM(updated.Players[Players.Count], Players.Count));
+            while (Players.Count > updated.Players.Count)
+                Players.RemoveAt(Players.Count - 1);
+
+            // Update each player's data in-place
             int n = Players.Count;
             for (int i = 0; i < n; i++)
             {
-                CardVM? vm = null;
-                if (cards != null && i < cards.Count && cards[i] != null)
-                    vm = new CardVM(cards[i]!);
-                Players[i].CardInPlay = vm;
+                var pvm = Players[i];
+                var p = updated.Players[i];
+
+                pvm.Name = p.Name;
+                pvm.TotalScore = p.TotalScore;
+
+                // Round stats (simple resync)
+                pvm.Rounds.Clear();
+                if (p.RoundStats != null)
+                {
+                    foreach (var rs in p.RoundStats)
+                        pvm.Rounds.Add(new RoundStatVM(rs));
+                }
+            }
+
+            // Cards in play mapping
+            SyncCardsInPlayFromState(updated);
+
+            // Rebuild current hand from backing model
+            RefreshCurrentHand();
+        }
+
+        private void SyncCardsInPlayFromState(GameState state)
+        {
+            var cip = state.CardsInPlay ?? new List<Card>();
+            for (int i = 0; i < Players.Count; i++)
+            {
+                Card? c = (i < cip.Count) ? cip[i] : null;
+                Players[i].CardInPlay = c != null ? new CardVM(c) : null;
             }
         }
 
-        /// <summary> Rebuilds the current player's hand from the underlying GameState. </summary>
         public void RefreshCurrentHand()
         {
             CurrentHand.Clear();
@@ -95,35 +139,6 @@ namespace SkullKingClientUI.ViewModels
 
             foreach (var c in hand)
                 CurrentHand.Add(new CardVM(c));
-        }
-
-        /// <summary> Apply changes from a new/updated GameState object. </summary>
-        public void ApplyGameState(GameState updated)
-        {
-            // Update round fields
-            CurrentRound = updated.CurrentRound;
-            CurrentSubRound = updated.CurrentSubRound;
-            MaxRounds = updated.MaxRounds;
-
-            // Update players total/round stats in place (simple resync)
-            for (int i = 0; i < Players.Count && i < updated.Players.Count; i++)
-            {
-                var pvm = Players[i];
-                var p = updated.Players[i];
-
-                pvm.Name = p.Name;
-                pvm.TotalScore = p.TotalScore;
-
-                // resync rounds (simple approach: clear+add)
-                pvm.Rounds.Clear();
-                foreach (var rs in p.RoundStats)
-                    pvm.Rounds.Add(new RoundStatVM(rs));
-            }
-
-            // Replace hands in backing GameState and refresh current hand
-            _gs.Players.Clear();
-            foreach (var p in updated.Players) _gs.Players.Add(p);
-            RefreshCurrentHand();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

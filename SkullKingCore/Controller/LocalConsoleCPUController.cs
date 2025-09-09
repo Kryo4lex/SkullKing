@@ -12,6 +12,8 @@ namespace SkullKingCore.Controller
 
         private readonly Random _random = new();
 
+        private readonly TimeSpan ArtificalDelay = TimeSpan.FromSeconds(0);
+
         public string Name { get; }
 
         public GameState? GameState { get; set; }
@@ -23,11 +25,14 @@ namespace SkullKingCore.Controller
 
         public Task<string> RequestName(GameState gameState, TimeSpan maxWait)
         {
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.FromResult(Name);
         }
 
         public Task NotifyGameStartedAsync(GameState gameState)
         {
+            Task.Delay(ArtificalDelay).Wait();
 
             return Task.CompletedTask;
         }
@@ -53,6 +58,8 @@ namespace SkullKingCore.Controller
 
             //Logger.Instance.WriteToConsoleAndLog($"{Name} plays {card}");
 
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.FromResult(card);
 
         }
@@ -61,6 +68,8 @@ namespace SkullKingCore.Controller
         {
 
             //Logger.Instance.WriteToConsoleAndLog($"{Name} {message}");
+
+            Task.Delay(ArtificalDelay).Wait();
 
             return Task.CompletedTask;
 
@@ -71,6 +80,8 @@ namespace SkullKingCore.Controller
 
             int bid = _random.Next(0, roundNumber + 1);
 
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.FromResult(bid);
 
         }
@@ -79,11 +90,15 @@ namespace SkullKingCore.Controller
         {
             //Logger.Instance.WriteToConsoleAndLog($"{player.Name} bids {bid}");
 
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
         public Task WaitForBidsReceivedAsync(GameState gameState)
         {
+
+            Task.Delay(ArtificalDelay).Wait();
 
             return Task.CompletedTask;
         }
@@ -95,6 +110,9 @@ namespace SkullKingCore.Controller
 
             Logger.Instance.WriteToConsoleAndLog($"{Name} played {playedCard}");
             */
+
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
@@ -111,6 +129,9 @@ namespace SkullKingCore.Controller
                 Logger.Instance.WriteToConsoleAndLog($"{player.Name} won round {round} with {winningCard}");
             }
             */
+
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
@@ -118,6 +139,8 @@ namespace SkullKingCore.Controller
         {
             //no need to tell console CPU what is happening
             //Logger.Instance.WriteToConsoleAndLog($"Sub round {state.CurrentSubRound}/{state.MaxRounds} started.");
+
+            Task.Delay(ArtificalDelay).Wait();
 
             return Task.CompletedTask;
         }
@@ -127,6 +150,8 @@ namespace SkullKingCore.Controller
             //no need to tell console CPU what is happening
             //Logger.Instance.WriteToConsoleAndLog($"Sub round {state.CurrentSubRound}/{state.MaxRounds} ended.");
 
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
@@ -134,6 +159,8 @@ namespace SkullKingCore.Controller
         {
             //no need to tell console CPU what is happening
             //Logger.Instance.WriteToConsoleAndLog("Collecting bids...");
+
+            Task.Delay(ArtificalDelay).Wait();
 
             return Task.CompletedTask;
         }
@@ -143,6 +170,8 @@ namespace SkullKingCore.Controller
             //no need to tell console CPU what is happening
             //Logger.Instance.WriteToConsoleAndLog($"--- Round {gameState.CurrentRound} ---");
 
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
@@ -151,27 +180,40 @@ namespace SkullKingCore.Controller
             //no need to tell console CPU what is happening
             //Logger.Instance.WriteToConsoleAndLog($"--- Game finished ---");
 
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
         public Task NotifyAboutGameWinnerAsync(GameState gameState, List<Player> winners)
         {
 
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
         public Task NotifyNotAllCardsInHandCanBePlayed(GameState gameState, List<Card> cardsThatPlayerIsAllowedToPlay, List<Card> cardsThatPlayerIsNotAllowedToPlay)
         {
+
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
         public Task NotifyPlayerTimedOutAsync(GameState gameState, Player player)
         {
+
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
 
         public Task NotifyAboutMainRoundEndAsync(GameState gameState)
         {
+
+            Task.Delay(ArtificalDelay).Wait();
+
             return Task.CompletedTask;
         }
     }

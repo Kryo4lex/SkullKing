@@ -1,4 +1,5 @@
 ﻿using SkullKingCore.Core.Cards.Base;
+using SkullKingCore.Core.Cards.Extensions;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Logging;
 using SkullKingCore.Statistics;
@@ -51,7 +52,7 @@ namespace SkullKingSandboxConsole.Commands
 
                 int cardIndex = 0;
 
-                Card.PrintListFancy(allGameCards);
+                allGameCards.PrintListFancy();
 
                 if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to add to the hand {cardsOnHandCounter + 1}/{cardsOnHandCount}:", out cardIndex, 0, allGameCards.Count - 1))
                 {
@@ -70,7 +71,7 @@ namespace SkullKingSandboxConsole.Commands
             Logger.Instance.WriteToConsoleAndLog($"N Simulations: {nSimulations}");
             Logger.Instance.WriteToConsoleAndLog($"Max Parallel Threads: {maxParallelThreads}");
             Logger.Instance.WriteToConsoleAndLog($"Selected Cards:");
-            Card.PrintListFancy(cardHandToTest);
+            cardHandToTest.PrintListFancy();
 
             CardHandWinProbability cardHandWinProbability = new CardHandWinProbability(cardHandToTest, playerCount, nSimulations);
 

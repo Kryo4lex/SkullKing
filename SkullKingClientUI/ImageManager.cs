@@ -7,10 +7,6 @@ using System.Windows.Media.Imaging;
 
 namespace SkullKingClientUI
 {
-    /// <summary>
-    /// Loads and caches images from a folder into a global dictionary.
-    /// Thread-safe singleton. Keys = filename without extension.
-    /// </summary>
     public sealed class ImageManager
     {
         private static readonly Lazy<ImageManager> _instance =
@@ -51,7 +47,7 @@ namespace SkullKingClientUI
         {
             var bmp = new BitmapImage();
             bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.OnLoad; // no file lock
+            bmp.CacheOption = BitmapCacheOption.OnLoad; // avoid file locks
             bmp.UriSource = new Uri(path, UriKind.Absolute);
             bmp.EndInit();
             bmp.Freeze(); // cross-thread safe

@@ -1,5 +1,6 @@
 ﻿using SkullKingCore.Core.Cards;
 using SkullKingCore.Core.Cards.Base;
+using SkullKingCore.Core.Cards.Extensions;
 using SkullKingCore.Core.Cards.Implementations;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Core.Game.Interfaces;
@@ -71,7 +72,7 @@ namespace SkullKingCore.Controller
             if (player != null)
             {
                 Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Your cards:");
-                Card.PrintListFancy(player.Hand);
+                player.Hand.PrintListFancy();
             }
             //else
             //{
@@ -114,7 +115,7 @@ namespace SkullKingCore.Controller
         {
             Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Not all Cards in your hand can be played due to lead color/suit rule. Cards you are not allowed to play:");
 
-            Card.PrintListFancy(cardsThatPlayerIsNotAllowedToPlay);
+            cardsThatPlayerIsNotAllowedToPlay.PrintListFancy();
 
             return Task.CompletedTask;
         }
@@ -126,7 +127,7 @@ namespace SkullKingCore.Controller
 
             Logger.Instance.WriteToConsoleAndLog($"{Environment.NewLine}Cards you can play:");
 
-            Card.PrintListFancy(hand);
+            hand.PrintListFancy();
 
             cardToPlayIndex = UserConsoleIO.ReadIntUntilValid($"{Environment.NewLine}Enter the index of the card you want to play:", 0, hand.Count - 1);
 

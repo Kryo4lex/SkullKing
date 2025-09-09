@@ -14,22 +14,19 @@
         SnapsToDevicePixels="True">
 
     <Grid>
-        <!-- Keep aspect ratio 16:9 -->
+        <!-- Lock design surface to 16:9 and scale -->
         <Viewbox Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Grid Width="1600" Height="900" Background="#101418">
                 <Grid Margin="24">
                     <Grid.ColumnDefinitions>
-                        <!-- Percent widths bound to the Window (not the VM) -->
-                        <ColumnDefinition Width="{Binding LeftColumnWidth,   RelativeSource={RelativeSource AncestorType=Window}}" />
+                        <ColumnDefinition Width="{Binding LeftColumnWidth,   RelativeSource={RelativeSource AncestorType=Window}}"/>
                         <ColumnDefinition Width="20"/>
-                        <!-- spacer -->
-                        <ColumnDefinition Width="{Binding MiddleColumnWidth, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        <ColumnDefinition Width="{Binding MiddleColumnWidth, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         <ColumnDefinition Width="20"/>
-                        <!-- spacer -->
-                        <ColumnDefinition Width="{Binding RightColumnWidth,  RelativeSource={RelativeSource AncestorType=Window}}" />
+                        <ColumnDefinition Width="{Binding RightColumnWidth,  RelativeSource={RelativeSource AncestorType=Window}}"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- ========== LEFT: Points (players + stats) ========== -->
+                    <!-- ========== LEFT: Points ========== -->
                     <Border Grid.Column="0" Background="#1E2530" CornerRadius="12" Padding="12">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -47,11 +44,11 @@
                                             <StackPanel Margin="0,0,0,16">
                                                 <Border Background="#2A3342" CornerRadius="8" Padding="10">
                                                     <StackPanel>
-                                                        <TextBlock Text="{Binding Name, Mode=OneWay}"
-                                                                   FontSize="20" FontWeight="Bold" Foreground="White"/>
+                                                        <TextBlock Text="{Binding Name}" FontSize="20"
+                                                                   FontWeight="Bold" Foreground="White"/>
                                                         <TextBlock>
                                                             <Run Text="Total: " Foreground="#BFD6FF"/>
-                                                            <Run Text="{Binding TotalScore, Mode=OneWay}"
+                                                            <Run Text="{Binding TotalScore}"
                                                                  Foreground="#FFD966" FontWeight="SemiBold"/>
                                                             <Run Text=" pts" Foreground="#BFD6FF"/>
                                                         </TextBlock>
@@ -60,18 +57,12 @@
 
                                                 <DataGrid ItemsSource="{Binding Rounds}"
                                                           AutoGenerateColumns="False"
-                                                          CanUserAddRows="False"
-                                                          CanUserDeleteRows="False"
-                                                          HeadersVisibility="Column"
-                                                          GridLinesVisibility="None"
-                                                          IsReadOnly="True"
-                                                          RowHeaderWidth="0"
-                                                          Margin="0,6,0,0"
-                                                          Background="Transparent"
-                                                          Foreground="White"
-                                                          BorderThickness="0"
-                                                          FontSize="14"
-                                                          EnableRowVirtualization="True"
+                                                          CanUserAddRows="False" CanUserDeleteRows="False"
+                                                          HeadersVisibility="Column" GridLinesVisibility="None"
+                                                          IsReadOnly="True" RowHeaderWidth="0"
+                                                          Margin="0,6,0,0" Background="Transparent"
+                                                          Foreground="White" BorderThickness="0"
+                                                          FontSize="14" EnableRowVirtualization="True"
                                                           EnableColumnVirtualization="True">
                                                     <DataGrid.Resources>
                                                         <Style TargetType="DataGridRow">
@@ -90,10 +81,10 @@
                                                         </Style>
                                                     </DataGrid.Resources>
                                                     <DataGrid.Columns>
-                                                        <DataGridTextColumn Header="Rnd"   Binding="{Binding Round, Mode=OneWay}"   Width="50"/>
-                                                        <DataGridTextColumn Header="Pred"  Binding="{Binding Predicted, Mode=OneWay}" Width="60"/>
-                                                        <DataGridTextColumn Header="Act"   Binding="{Binding Actual, Mode=OneWay}"    Width="60"/>
-                                                        <DataGridTextColumn Header="Bonus" Binding="{Binding Bonus, Mode=OneWay}"     Width="80"/>
+                                                        <DataGridTextColumn Header="Rnd"   Binding="{Binding Round}"    Width="50"/>
+                                                        <DataGridTextColumn Header="Pred"  Binding="{Binding Predicted}" Width="60"/>
+                                                        <DataGridTextColumn Header="Act"   Binding="{Binding Actual}"    Width="60"/>
+                                                        <DataGridTextColumn Header="Bonus" Binding="{Binding Bonus}"     Width="80"/>
                                                     </DataGrid.Columns>
                                                 </DataGrid>
                                             </StackPanel>
@@ -104,16 +95,13 @@
                         </Grid>
                     </Border>
 
-                    <!-- ========== MIDDLE: Trick (cards in play + round info + message box) ========== -->
+                    <!-- ========== MIDDLE: Trick ========== -->
                     <Border Grid.Column="2" CornerRadius="12" Background="#17202A" Padding="12">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
-                                <!-- header + round info -->
                                 <RowDefinition Height="*"/>
-                                <!-- board -->
                                 <RowDefinition Height="Auto"/>
-                                <!-- message box -->
                             </Grid.RowDefinitions>
 
                             <!-- Header + round info -->
@@ -127,8 +115,9 @@
                                 </StackPanel>
                             </DockPanel>
 
-                            <!-- Cards board -->
-                            <ItemsControl x:Name="CardsBoard" Grid.Row="1" ItemsSource="{Binding Players}">
+                            <!-- Cards in play: per player slot -->
+                            <ItemsControl x:Name="CardsBoard" Grid.Row="1" ItemsSource="{Binding Players}"
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                 <ItemsControl.ItemContainerStyle>
                                     <Style TargetType="ContentPresenter">
                                         <Setter Property="HorizontalAlignment" Value="Stretch"/>
@@ -137,6 +126,7 @@
                                 </ItemsControl.ItemContainerStyle>
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
+                                        <!-- Rows/Cols set in code-behind based on player count -->
                                         <UniformGrid/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
@@ -146,9 +136,9 @@
                                                 Background="#0E141B"
                                                 CornerRadius="10"
                                                 Padding="8"
-                                                SnapsToDevicePixels="True"
                                                 HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Stretch"
+                                                SnapsToDevicePixels="True"
                                                 ClipToBounds="True">
                                             <Grid>
                                                 <Grid.RowDefinitions>
@@ -156,18 +146,11 @@
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
 
-                                                <TextBlock Grid.Row="0"
-                                                           Text="{Binding Name}"
-                                                           Foreground="#BFD6FF"
-                                                           HorizontalAlignment="Center"
-                                                           Margin="0,0,0,6"
-                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="0" Text="{Binding Name}"
+                                                           Foreground="#BFD6FF" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center" Margin="0,0,0,6"/>
 
-                                                <Border Grid.Row="1"
-                                                        CornerRadius="10"
-                                                        Background="#0A0F15"
-                                                        Padding="8"
-                                                        ClipToBounds="True">
+                                                <Border Grid.Row="1" CornerRadius="10" Background="#0A0F15" Padding="8" ClipToBounds="True">
                                                     <Grid>
                                                         <Image x:Name="CardImage"
                                                                Stretch="Uniform"
@@ -176,10 +159,8 @@
                                                                Source="{Binding CardInPlay.Image}"
                                                                RenderOptions.BitmapScalingMode="HighQuality"/>
                                                         <TextBlock Text="Waiting..."
-                                                                   Foreground="#9EB0C6"
-                                                                   FontStyle="Italic"
-                                                                   HorizontalAlignment="Center"
-                                                                   VerticalAlignment="Center">
+                                                                   Foreground="#9EB0C6" FontStyle="Italic"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -202,25 +183,17 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <!-- Trick message box (bottom, read-only) -->
-                            <DockPanel Grid.Row="2" Margin="0,8,0,0">
-                                <TextBox x:Name="TrickMessageBox"
-                                         Text="{Binding TrickMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         Foreground="White"
-                                         Background="#0E141B"
-                                         BorderBrush="#2A3342"
-                                         Padding="6"
-                                         MinHeight="36"
-                                         VerticalContentAlignment="Center"
-                                         IsReadOnly="True"
-                                         IsReadOnlyCaretVisible="False"
-                                         Focusable="False"
-                                         IsTabStop="False"/>
-                            </DockPanel>
+                            <!-- Read-only message -->
+                            <TextBox Grid.Row="2"
+                                     Text="{Binding TrickMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Foreground="White" Background="#0E141B" BorderBrush="#2A3342"
+                                     Padding="6" MinHeight="36" VerticalContentAlignment="Center"
+                                     IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                                     Focusable="False" IsTabStop="False" />
                         </Grid>
                     </Border>
 
-                    <!-- ========== RIGHT: Hand (current player's cards) ========== -->
+                    <!-- ========== RIGHT: Hand (current player) ========== -->
                     <Border Grid.Column="4" CornerRadius="12" Background="#1A232E" Padding="12">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -231,45 +204,35 @@
                             <TextBlock Grid.Row="0" Text="Hand" Foreground="#BFD6FF"
                                        FontSize="18" FontWeight="SemiBold" Margin="4,0,0,8"/>
 
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl x:Name="HandBoard" ItemsSource="{Binding CurrentHand}">
-                                    <!-- Make each card fill its grid cell -->
-                                    <ItemsControl.ItemContainerStyle>
-                                        <Style TargetType="ContentPresenter">
-                                            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                                            <Setter Property="VerticalAlignment" Value="Stretch"/>
-                                        </Style>
-                                    </ItemsControl.ItemContainerStyle>
-
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <!-- Rows/Columns set in code-behind:
-                                                 1 card -> 1x1
-                                                 2 cards -> 1 col x 2 rows
-                                                 >2 cards -> 2 cols x ceil(n/2) rows -->
-                                            <UniformGrid/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Margin="6"
-                                                    Background="#0A0F15"
-                                                    CornerRadius="8"
-                                                    Padding="6"
-                                                    HorizontalAlignment="Stretch"
-                                                    VerticalAlignment="Stretch"
-                                                    ClipToBounds="True">
+                            <!-- No ScrollViewer: UniformGrid gets finite size and fits all cards -->
+                            <ItemsControl x:Name="HandBoard" Grid.Row="1" ItemsSource="{Binding CurrentHand}"
+                                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                        <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <!-- Rows/Cols set in code-behind from count -->
+                                        <UniformGrid/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="6" Background="#0A0F15" CornerRadius="8" Padding="6"
+                                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True">
+                                            <!-- Guarantees fit inside each cell -->
+                                            <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
                                                 <Image Source="{Binding Image}"
-                                                       Stretch="Uniform"
-                                                       HorizontalAlignment="Stretch"
-                                                       VerticalAlignment="Stretch"
-                                                       RenderOptions.BitmapScalingMode="HighQuality"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                                       SnapsToDevicePixels="True"/>
+                                            </Viewbox>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Grid>
                     </Border>
                 </Grid>

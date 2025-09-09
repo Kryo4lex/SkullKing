@@ -1,4 +1,5 @@
 ﻿using SkullKingCore.Core.Cards.Base;
+using SkullKingCore.Core.Cards.Extensions;
 using SkullKingCore.Core.Game;
 using SkullKingCore.Logging;
 using SkullKingCore.Statistics;
@@ -18,7 +19,7 @@ namespace SkullKingSandboxConsole.Commands
 
             List<Card> allGameCards = Deck.CreateDeck();
 
-            Card.PrintListFancy(allGameCards);
+            allGameCards.PrintListFancy();
 
             if (!UserConsoleIO.TryReadInt($"{Environment.NewLine}Enter the index of the card you want to run the Simulation for:", out cardIndex, 0, allGameCards.Count - 1))
             {
